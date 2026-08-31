@@ -1,0 +1,33 @@
+{
+  "description": "Broad questions a closed-book model can reasonably attempt, each still bound to a gold calendar chunk — used by eval/run_ablation.py as the 'general' arm. gold_ids are valid only for the 3,770-chunk index built 2026-08-31; regenerate after any re-ingest.",
+  "items": [
+    {
+      "id": "g001",
+      "question": "What happens to a UBC student's academic standing, and what standings exist?",
+      "reference_answer": "There are three levels of academic standing: In Good Standing, On Academic Probation, and Failed, Required to Withdraw. Students enter the University In Good Standing.",
+      "gold_ids": [0],
+      "source_chunk_id": 0
+    },
+    {
+      "id": "g002",
+      "question": "Roughly how many credits does a UBC B.Sc. degree require?",
+      "reference_answer": "A minimum of 120 credits; some options require more.",
+      "gold_ids": [2023],
+      "source_chunk_id": 2023
+    },
+    {
+      "id": "g003",
+      "question": "What is CPSC 110 at UBC about?",
+      "reference_answer": "CPSC 110, Computation, Programs, and Programming (4 credits), covers fundamental program and computation structures.",
+      "gold_ids": [5],
+      "source_chunk_id": 5
+    },
+    {
+      "id": "g004",
+      "question": "What kinds of requirements does a UBC Bachelor of Arts student have to complete?",
+      "reference_answer": "B.A. students complete a set of faculty-wide degree requirements — for current entrants (2024/25 or later): Writing and Research, Ways of Knowing Breadth, Outside, Upper-level, and Arts Credit Minimum; earlier cohorts also had separate Language, Science, and Literature requirements.",
+      "gold_ids": [128, 114],
+      "source_chunk_id": 128
+    }
+  ]
+}

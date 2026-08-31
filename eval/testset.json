@@ -1,0 +1,101 @@
+{
+  "description": "Hand-curated, corpus-grounded test set (authored directly from indexed chunks; regenerate candidates with eval/make_testset.py once a local LLM backend is available). Categories: code-lookup (hinges on a course code — BM25's job), multi-hop (spans chunks — the agent/reranker's job), collision (edition- or cohort-qualified — the corpus's trap), policy. gold_ids are valid ONLY for the 3,770-chunk index built 2026-08-31 from the full live-2627 + archive-2526 crawl; regenerate after any re-ingest.",
+  "items": [
+    {
+      "id": "q001",
+      "category": "code-lookup",
+      "question": "What are the prerequisites for CPSC 221?",
+      "reference_answer": "One of CPSC 210 or CPEN 221, and either one of CPSC 121, MATH 220 (or MATH_O 220), or a score of 68% or higher in MATH 226.",
+      "gold_ids": [10, 182],
+      "source_chunk_id": 10
+    },
+    {
+      "id": "q002",
+      "category": "code-lookup",
+      "question": "What are the prerequisites for CPSC 320?",
+      "reference_answer": "CPSC 221 (or DSCI 221) plus at least 3 credits of MATH or STAT at the 200 level or above (the 2025/26 edition also accepted COMM 291 or BIOL 300 for the second part).",
+      "gold_ids": [24, 197],
+      "source_chunk_id": 24
+    },
+    {
+      "id": "q003",
+      "category": "code-lookup",
+      "question": "What are the prerequisites for CPSC 313?",
+      "reference_answer": "CPSC 213, and either CPSC 221 or DSCI 221.",
+      "gold_ids": [20, 193],
+      "source_chunk_id": 20
+    },
+    {
+      "id": "q004",
+      "category": "code-lookup",
+      "question": "Which courses satisfy the prerequisite for MATH 200, Calculus III?",
+      "reference_answer": "One of MATH 101, MATH 103, MATH 105, MATH 121, SCIE 001, MATH_O 101, or MATH_O 103.",
+      "gold_ids": [580, 2319],
+      "source_chunk_id": 580
+    },
+    {
+      "id": "q005",
+      "category": "code-lookup",
+      "question": "How many credits is CPSC 110 worth and what does it cover?",
+      "reference_answer": "CPSC 110 (Computation, Programs, and Programming) is worth 4 credits and covers fundamental program and computation structures.",
+      "gold_ids": [5, 177],
+      "source_chunk_id": 5
+    },
+    {
+      "id": "q006",
+      "category": "multi-hop",
+      "question": "Compare the B.A. degree requirements for students who entered the program in 2023/24 with those who entered in 2024/25 or later.",
+      "reference_answer": "Students entering 2023/24 or earlier must complete seven requirements: Writing and Research, Language, Science, Literature, Outside, Upper-level, and Arts Credit Minimum. Students entering 2024/25 or later complete five: Writing and Research, Ways of Knowing Breadth, Outside, Upper-level, and Arts Credit Minimum — the separate Language, Science, and Literature requirements are folded into the Ways of Knowing Breadth requirement.",
+      "gold_ids": [114, 128],
+      "source_chunk_id": 114
+    },
+    {
+      "id": "q007",
+      "category": "multi-hop",
+      "question": "How does admission to the Bachelor of Computer Science program differ from B.Sc. admission from secondary school?",
+      "reference_answer": "Bachelor of Computer Science admission is a competitive selection process evaluating applicants on academic and other criteria (not every qualified applicant is admitted); B.Sc. admission from secondary school requires starting first year in September of the Winter session of admission (January starts are not permitted).",
+      "gold_ids": [1769, 1791],
+      "source_chunk_id": 1769
+    },
+    {
+      "id": "q008",
+      "category": "multi-hop",
+      "question": "I have finished CPSC 210. What else do I need to complete before I can take CPSC 313?",
+      "reference_answer": "CPSC 313 requires CPSC 213 and either CPSC 221 or DSCI 221. CPSC 221 in turn requires (beyond CPSC 210) one of CPSC 121, MATH 220, MATH_O 220, or a 68%+ score in MATH 226. So after CPSC 210 you still need CPSC 213 and CPSC 221 (with its discrete-math prerequisite).",
+      "gold_ids": [20, 10],
+      "source_chunk_id": 20
+    },
+    {
+      "id": "q009",
+      "category": "collision",
+      "question": "In the 2025/26 calendar, what is the minimum number of credits required for a B.Sc. degree?",
+      "reference_answer": "A minimum of 120 credits (a major, double major, or General Science option requires at least 120 credits but may require more).",
+      "gold_ids": [3508],
+      "source_chunk_id": 3508
+    },
+    {
+      "id": "q010",
+      "category": "collision",
+      "question": "According to the current 2026/27 calendar, what is the minimum number of credits required for a B.Sc. degree?",
+      "reference_answer": "A minimum of 120 credits (a major, double major, or General Science option requires at least 120 credits but may require more).",
+      "gold_ids": [2023],
+      "source_chunk_id": 2023
+    },
+    {
+      "id": "q011",
+      "category": "collision",
+      "question": "Does a B.A. student who entered the program in 2024/25 or later have to complete a language requirement?",
+      "reference_answer": "No. Their five degree requirements are Writing and Research, Ways of Knowing Breadth, Outside, Upper-level, and Arts Credit Minimum — there is no separate language requirement (that applies to students who entered in 2023/24 or earlier).",
+      "gold_ids": [128],
+      "source_chunk_id": 128
+    },
+    {
+      "id": "q012",
+      "category": "policy",
+      "question": "What are the three levels of academic standing at UBC?",
+      "reference_answer": "In Good Standing; On Academic Probation; and Failed, Required to Withdraw. All students are In Good Standing on initial entry to the University.",
+      "gold_ids": [0],
+      "source_chunk_id": 0
+    }
+  ]
+}

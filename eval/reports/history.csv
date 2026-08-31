@@ -1,0 +1,4 @@
+timestamp,name,k,num_questions,judged,chat_model,judge_model,hit@k,recall@k,mrr,faithfulness,answer_relevancy,context_precision,context_recall,hallucination_rate
+2026-08-31T00:30:01,sweep-dense,4,12,False,google/gemma-4-e4b,google/gemma-4-e4b,0.5,0.4583,0.4028,,,,,
+2026-08-31T00:30:06,sweep-hybrid,4,12,False,google/gemma-4-e4b,google/gemma-4-e4b,0.6667,0.625,0.5417,,,,,
+2026-08-31T00:32:59,sweep-hybrid-rerank,4,12,False,google/gemma-4-e4b,google/gemma-4-e4b,0.6667,0.625,0.5417,,,,,
