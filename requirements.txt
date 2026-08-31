@@ -1,0 +1,22 @@
+# --- Retrieval / generation engine (copied from RAGChef) ---
+# Query/document embeddings go through OpenAI's hosted API (openai client);
+# BM25 is hand-rolled on numpy.
+openai>=1.0
+numpy>=1.26
+
+# Generation defaults to Claude via the Anthropic API (UBCAL_LLM_BACKEND=anthropic).
+anthropic>=1.0
+
+# Loads a .env at the project root (config.py) so keys and UBCAL_* overrides can live in
+# a file instead of shell exports.
+python-dotenv>=1.0
+
+# The reranker runs on Cohere's hosted rerank API (only the hybrid_rerank mode needs it).
+cohere>=5.0
+
+# --- Data layer: scraping the UBC Vancouver Academic Calendar ---
+# Plain HTTP GETs (the site is server-rendered Drupal 11 — no headless browser needed) +
+# HTML parsing. lxml is BeautifulSoup's fast parser backend.
+requests>=2.31
+beautifulsoup4>=4.12
+lxml>=5.0

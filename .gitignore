@@ -1,0 +1,20 @@
+# Virtual environment
+.venv/
+
+# Built index ("vector store") — regenerate with `python -m src.ingest`
+index/
+
+# Scraped calendar corpus. This is UBC content and is NOT ours to redistribute
+# (Terms of Use §a: no reproduction/republishing without written consent). The whole
+# crawl stays local; only the scraper and docs are committed.
+data/pages/
+data/courses.jsonl
+
+# Local secrets / env overrides — never commit. The template .env.example IS committed.
+.env
+
+# Python noise
+__pycache__/
+*.pyc
+
+can-you-create-a-rippling-pearl.md
