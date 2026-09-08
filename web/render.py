@@ -24,6 +24,12 @@ def _fmt(value: float, places: int = 3) -> str:
     return f"{float(value):.{places}f}"
 
 
+def _md_link_text(text: str) -> str:
+    """Escape a Markdown link label. Calendar titles routinely carry the edition in square
+    brackets ("Academic Standing [2026/27]"), which would otherwise break the link."""
+    return text.replace("\\", "\\\\").replace("[", "\\[").replace("]", "\\]")
+
+
 class Renderer:
     """Accumulates trace events and renders the three panels."""
 
@@ -159,35 +165,35 @@ class Renderer:
             )
         return "".join(blocks)
 
-    def answer_html(self) -> str:
+    def answer_markdown(self) -> str:
+        """The answer section as Markdown, for a gr.Markdown component.
+
+        Markdown rather than HTML because the model writes Markdown — headings, bold and
+        lists appear in 19 of the 24 recorded answers. Escaping that into a pre-wrap block
+        showed the visitor literal '#' and '**'. Gradio renders (and sanitises) Markdown
+        natively, so this needs neither a new dependency nor a hand-rolled converter.
+        """
         if self.error:
-            return f'<div class="notice">{_e(self.error)}</div>'
+            return f"> {self.error}"
         if not self.answer_text:
             return ""
         badge = "agentic route" if self.route == "complex" else "simple route"
+        parts = [f"### Answer &nbsp;·&nbsp; *{badge}*", "", self.answer_text.strip()]
+
         seen, links = set(), []
         for doc_id in self.order or list(self.docs):
             doc = self.docs.get(doc_id)
             if not doc or not doc.get("url") or doc["url"] in seen:
                 continue
             seen.add(doc["url"])
-            links.append(
-                f'<li><a href="{_e(doc["url"])}" target="_blank" rel="noopener noreferrer">'
-                f'{_e(doc["title"])}</a></li>'
-            )
-        sources = ""
+            links.append(f"- [{_md_link_text(doc['title'])}]({doc['url']})")
         if links:
             plural = "s" if len(links) > 1 else ""
-            sources = (f'<div class="sources"><h3>Grounded in {len(links)} calendar '
-                       f'page{plural}</h3><ul>{"".join(links)}</ul></div>')
-        return (
-            f'<div class="answer-section"><h2>Answer '
-            f'<span class="route-badge">{_e(badge)}</span></h2>'
-            f'<div class="answer">{_e(self.answer_text)}</div>{sources}</div>'
-        )
+            parts += ["", f"**Grounded in {len(links)} calendar page{plural}**", ""] + links
+        return "\n".join(parts)
 
     def panels(self, running: bool = False) -> tuple[str, str, str]:
-        return self.trace_html(running), self.retrieval_html(), self.answer_html()
+        return self.trace_html(running), self.retrieval_html(), self.answer_markdown()
 
 
 def _column(name: str, css: str, items: list[dict], shortlist: set, survivors: set) -> str:

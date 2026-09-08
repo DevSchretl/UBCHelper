@@ -28,6 +28,7 @@ def _get_client() -> OpenAI:
         _client = OpenAI(
             base_url=config.EMBED_BASE_URL,
             api_key=config.EMBED_API_KEY,
+            timeout=config.API_TIMEOUT,
         )
     return _client
 

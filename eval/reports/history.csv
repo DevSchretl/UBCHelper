@@ -4,3 +4,4 @@ timestamp,name,k,num_questions,judged,chat_model,judge_model,hit@k,recall@k,mrr,
 2026-08-31T00:32:59,sweep-hybrid-rerank,4,12,False,google/gemma-4-e4b,google/gemma-4-e4b,0.6667,0.625,0.5417,,,,,
 2026-09-06T00:47:36,post-instrumentation,4,12,False,google/gemma-4-e4b,google/gemma-4-e4b,0.6667,0.625,0.5417,,,,,
 2026-09-06T11:42:46,final-check,4,12,False,google/gemma-4-e4b,google/gemma-4-e4b,0.6667,0.625,0.5417,,,,,
+2026-09-07T23:42:26,full,4,12,True,claude-haiku-4-5,google/gemma-4-e4b,0.6667,0.625,0.5417,0.9062,0.7588,0.7778,0.7139,0.0938

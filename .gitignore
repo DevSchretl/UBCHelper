@@ -29,7 +29,3 @@ site/
 # Python noise
 __pycache__/
 *.pyc
-
-can-you-create-a-rippling-pearl.md
-DEPLOY.md
-Dockerfile

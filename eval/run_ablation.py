@@ -126,7 +126,7 @@ def _aggregate(per_item: list[dict], k: int) -> dict:
             "timestamp": datetime.now().isoformat(timespec="seconds"),
             "k": k,
             "num_questions": len(per_item),
-            "chat_model": config.CHAT_MODEL,
+            "chat_model": generate.active_model(),
             "judge_model": config.JUDGE_MODEL,
             "embedding_model": config.EMBEDDING_MODEL,
             "corpus_size": len(retrieve._load_index()[1]),  # indexed chunk count

@@ -30,7 +30,7 @@ def _get_client():
     if _client is None:
         import cohere
 
-        _client = cohere.Client(config.COHERE_API_KEY)
+        _client = cohere.Client(config.COHERE_API_KEY, timeout=config.API_TIMEOUT)
     return _client
 
 

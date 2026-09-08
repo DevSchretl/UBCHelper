@@ -181,8 +181,9 @@ def answer(question: str, mode_label: str, route_label: str, request: gr.Request
 def _usage_line() -> str:
     usage = limits.snapshot()
     if usage["budget_exhausted"]:
-        return ("**Daily API budget reached.** The live pipeline resets at 00:00 UTC — "
-                "the recorded walkthrough is still available.")
+        # No "see the recorded runs instead" here: web/replay.py and web/cache/ belong to
+        # the FastAPI and static builds, and neither ships with this Space.
+        return "**Daily API budget reached.** The live pipeline resets at 00:00 UTC."
     return (f"{usage['llm_calls_remaining']}/{usage['llm_calls_limit']} model calls left today "
             f"· {usage['per_ip_hour']}/hour per visitor · {CHUNKS:,} chunks indexed "
             f"· {config.RETRIEVAL_MODE} · {config.ANTHROPIC_MODEL}")
@@ -223,7 +224,8 @@ with gr.Blocks(title="UBC Calendar RAG") as demo:
             retrieval_out = gr.HTML(
                 '<div class="empty">Candidate documents will appear here.</div>')
 
-    answer_out = gr.HTML()
+    # gr.Markdown, not gr.HTML: the model answers in Markdown and Gradio renders it.
+    answer_out = gr.Markdown()
 
     gr.Markdown(
         "Excerpts are quoted from the [UBC Vancouver Academic Calendar]"

@@ -107,7 +107,7 @@ def _aggregate(per_item: list[dict], k: int, do_judge: bool) -> dict:
             "num_questions": len(per_item),
             "judged": do_judge,
             "retrieval_mode": config.RETRIEVAL_MODE,
-            "chat_model": config.CHAT_MODEL,
+            "chat_model": generate.active_model(),
             "judge_model": config.JUDGE_MODEL,
             "embedding_model": config.EMBEDDING_MODEL,
             "corpus_size": len(retrieve._load_index()[1]),  # indexed chunk count

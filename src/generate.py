@@ -74,6 +74,7 @@ def _get_openai_client():
         _openai_client = OpenAI(
             base_url=config.OPENAI_BASE_URL,
             api_key=config.OPENAI_API_KEY,
+            timeout=config.API_TIMEOUT,
         )
     return _openai_client
 
@@ -84,7 +85,7 @@ def _get_anthropic_client():
     if _anthropic_client is None:
         import anthropic
 
-        _anthropic_client = anthropic.Anthropic()
+        _anthropic_client = anthropic.Anthropic(timeout=config.API_TIMEOUT)
     return _anthropic_client
 
 
@@ -119,6 +120,16 @@ def complete(system: str, user: str, purpose: str = "complete") -> str:
     return _complete(system, user, purpose)
 
 
+def active_model() -> str:
+    """The model that actually answers, given the configured backend.
+
+    `config.CHAT_MODEL` names only the local model, so on the default Anthropic backend it
+    is the wrong label. The eval harness reports this instead, so a run is attributed to the
+    model that really produced its answers.
+    """
+    return config.ANTHROPIC_MODEL if config.LLM_BACKEND == "anthropic" else config.CHAT_MODEL
+
+
 def _complete(system: str, user: str, purpose: str = "generate") -> str:
     """Dispatch one (system, user) turn to the configured backend and return the text.
 
@@ -127,7 +138,7 @@ def _complete(system: str, user: str, purpose: str = "generate") -> str:
     labels which stage asked for the call, so a consumer can attribute it without having to
     fingerprint the system prompt.
     """
-    model = config.ANTHROPIC_MODEL if config.LLM_BACKEND == "anthropic" else config.CHAT_MODEL
+    model = active_model()
     trace.prompt(system, user, model)
     started = time.perf_counter()
     if config.LLM_BACKEND == "anthropic":

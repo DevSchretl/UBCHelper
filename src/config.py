@@ -149,6 +149,11 @@ EMBED_BASE_URL = os.getenv("UBCAL_EMBED_BASE_URL")   # None -> real OpenAI endpo
 EMBED_API_KEY = os.getenv("OPENAI_API_KEY", "")
 EMBEDDING_MODEL = os.getenv("UBCAL_EMBED_MODEL", "text-embedding-3-small")
 
+# Per-request timeout for the hosted APIs. The SDK defaults are 300-600 s, which on a demo
+# serving one run at a time means a single stalled call holds the only slot for ten minutes.
+# Real calls take 1-5 s, so a minute is generous.
+API_TIMEOUT = float(os.getenv("UBCAL_API_TIMEOUT", "60"))
+
 TEMPERATURE = float(os.getenv("UBCAL_TEMPERATURE", "0.2"))
 MAX_TOKENS = int(os.getenv("UBCAL_MAX_TOKENS", "1024"))
 
