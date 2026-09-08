@@ -7,7 +7,7 @@ sdk: gradio
 sdk_version: 6.26.0
 app_file: app.py
 python_version: "3.12"
-short_description: Adaptive RAG over the UBC Academic Calendar, with its internals on display
+short_description: Adaptive RAG over the UBC Calendar, internals shown
 pinned: false
 ---
 
