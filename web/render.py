@@ -36,11 +36,6 @@ class Renderer:
         self.answer_text = ""
         self.route = ""
         self.error = ""
-        # Paid-API call counts, tallied straight off the event stream. Every paid call
-        # announces itself — one `llm_call` per generation, one `retrieval_start` per query
-        # embedding, one `shortlist` per Cohere rerank — so this stays correct on its own if
-        # the pipeline's shape ever changes.
-        self.calls = {"llm": 0, "embed": 0, "rerank": 0}
 
     # ---------------------------------------------------------------- ingest
     def feed(self, event: dict) -> None:
@@ -75,7 +70,6 @@ class Renderer:
         self._step()["extras"].append(f'<ol class="subq">{items}</ol>')
 
     def _on_llm_call(self, ev: dict) -> None:
-        self.calls["llm"] += 1
         self._step()["extras"].append(
             '<details class="prompt">'
             f'<summary>prompt &amp; reply — {_e(ev["model"])} · {ev["ms"]} ms</summary>'
@@ -96,7 +90,6 @@ class Renderer:
         )
 
     def _on_retrieval_start(self, ev: dict) -> None:
-        self.calls["embed"] += 1
         self.hops.append({
             "query": ev["query"], "columns": {}, "shortlist": set(), "finals": [],
         })
@@ -106,7 +99,6 @@ class Renderer:
             self.hops[-1]["columns"][ev["stage"]] = ev["items"]
 
     def _on_shortlist(self, ev: dict) -> None:
-        self.calls["rerank"] += 1
         if self.hops:
             self.hops[-1]["shortlist"] = set(ev["ids"])
 

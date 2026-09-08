@@ -52,6 +52,23 @@ PRICES = {
 HOUR = 3600
 DAY = 86400
 
+# Which trace events correspond to a paid API call, and which counter each feeds. Every paid
+# call announces itself in the stream, so tallying these is exact rather than estimated — and
+# it stays correct on its own if the pipeline's shape changes. Shared by every delivery mode
+# so the three of them cannot drift apart on what counts as spend.
+PAID_EVENT_KINDS = {
+    "llm_call": "llm",          # one generation (route, decompose, or answer)
+    "retrieval_start": "embed",  # one query embedding
+    "shortlist": "rerank",       # one Cohere rerank (hybrid_rerank mode only)
+}
+
+
+def tally(counts: dict, event: dict) -> None:
+    """Fold one trace event into a {llm, embed, rerank} tally, in place."""
+    bucket = PAID_EVENT_KINDS.get(event.get("kind"))
+    if bucket:
+        counts[bucket] = counts.get(bucket, 0) + 1
+
 
 @dataclass
 class Decision:

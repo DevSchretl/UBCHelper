@@ -91,14 +91,6 @@ def _client_ip(request: gr.Request | None) -> str:
     return getattr(client, "host", None) or "unknown"
 
 
-def _run_pipeline(question: str, mode: str, route: str, events: queue.Queue) -> dict:
-    """Run the pipeline, pushing each trace event onto `events`. Returns the result."""
-    with trace.collect(events.put):
-        return pipeline.answer(
-            question, mode=mode, route=None if route == "auto" else route
-        )
-
-
 def answer(question: str, mode_label: str, route_label: str, request: gr.Request):
     """Stream the pipeline's internals as it runs. A Gradio generator: each yield repaints."""
     mode = MODES.get(mode_label, "hybrid_rerank")
@@ -119,13 +111,33 @@ def answer(question: str, mode_label: str, route_label: str, request: gr.Request
     renderer = Renderer(question)
     events: queue.Queue = queue.Queue()
     box: dict = {}
+    counts: dict = {"llm": 0, "embed": 0, "rerank": 0}
 
     def work() -> None:
+        """Run the pipeline on a worker thread, tallying and billing paid calls at the source.
+
+        Billing happens *here*, in this thread's finally, rather than after the streaming loop
+        below. Gradio closes the generator when a visitor navigates away or drops the
+        connection, which raises GeneratorExit at a yield — but this thread is detached and
+        uncancellable, so it goes on to complete every paid OpenAI/Cohere/Anthropic call. If
+        the tally lived with the consumer, those calls would never reach the daily ceiling
+        that is the demo's actual spend bound. Counting at the source is the only place the
+        number is complete. (web/runner.py:work does the same, for the same reason.)
+        """
+        def emit(event: dict) -> None:
+            limits.tally(counts, event)
+            events.put(event)
+
         try:
-            box["result"] = _run_pipeline(question, mode, route, events)
+            with trace.collect(emit):
+                box["result"] = pipeline.answer(
+                    question, mode=mode, route=None if route == "auto" else route
+                )
         except Exception as exc:  # noqa: BLE001 - surfaced to the visitor as a generic note
             box["error"] = exc
         finally:
+            if any(counts.values()):
+                limits.record(**counts)
             events.put(None)
 
     thread = threading.Thread(target=work, daemon=True)
@@ -151,10 +163,6 @@ def answer(question: str, mode_label: str, route_label: str, request: gr.Request
             yield trace_html, retrieval_html, answer_html, _usage_line()
 
     thread.join(timeout=5)
-
-    # The paid calls happened whether or not the run succeeded, so bill them either way.
-    if any(renderer.calls.values()):
-        limits.record(**renderer.calls)
 
     if "error" in box:
         print(f"[demo] run failed: {type(box['error']).__name__}: {box['error']}", flush=True)

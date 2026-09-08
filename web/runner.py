@@ -53,12 +53,10 @@ def count_api_calls(events: list[dict]) -> dict:
     the accounting is exact rather than estimated, and it stays correct automatically if the
     pipeline's shape ever changes.
     """
-    kinds = [e["kind"] for e in events]
-    return {
-        "llm": kinds.count("llm_call"),
-        "embed": kinds.count("retrieval_start"),
-        "rerank": kinds.count("shortlist"),
-    }
+    counts = {"llm": 0, "embed": 0, "rerank": 0}
+    for event in events:
+        limits.tally(counts, event)
+    return counts
 
 
 def try_admit() -> bool:
