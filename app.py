@@ -1,13 +1,14 @@
 """Gradio entry point for the Hugging Face Space.
 
-Why Gradio and not the FastAPI app in `web/`: Hugging Face bills Spaces that run compute,
-with one exception — free accounts may host up to 2 Gradio Spaces on ZeroGPU. ZeroGPU is
-Gradio-SDK-only, so this file is what makes a *live* demo free. It runs the same
+Why Gradio and not the FastAPI app in `web/`: a Space that runs Python must use a supported
+SDK, and Gradio is the one that fits a single interactive page. It runs the same
 `pipeline.answer()` the CLI does; the trace events it emits are rendered to HTML by
 `web/render.py` instead of being streamed to a browser-side renderer.
 
-No `@spaces.GPU` anywhere on purpose. The pipeline is numpy plus three hosted APIs — there
-is nothing to put on a GPU, so the Space never requests one and never consumes GPU quota.
+There is no `@spaces.GPU` here because there is nothing to put on a GPU — the pipeline is
+numpy plus three hosted APIs. That rules out ZeroGPU, which kills a Space with "No
+@spaces.GPU function detected during startup", so this Space runs on `cpu-basic` hardware
+(free per-hour, but creating a compute Space needs an HF PRO account). See DEPLOY.md.
 
 The spend controls from the FastAPI build carry over unchanged (`web/limits.py`): a global
 daily ceiling on paid API calls and per-IP sliding windows, keyed on a salted hash of the
