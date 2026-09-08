@@ -37,10 +37,11 @@ def decompose(question: str) -> list[str]:
     """Split `question` into up to AGENT_MAX_SUBQ sub-questions; fall back to the original."""
     trace.step("AGENT - decompose into sub-questions")
     system = DECOMPOSE_SYSTEM.format(max_subq=config.AGENT_MAX_SUBQ)
-    reply = generate.complete(system, question)
+    reply = generate.complete(system, question, purpose="decompose")
     subqs = [_strip_bullet(line) for line in reply.splitlines()]
     subqs = [s for s in subqs if s]
     subqs = subqs[: config.AGENT_MAX_SUBQ] if subqs else [question]
+    trace.event("subquestions", items=subqs)
     for i, sq in enumerate(subqs, start=1):
         trace.detail(f"sub-question {i}", sq)
     return subqs
@@ -72,11 +73,14 @@ def synthesize(question: str, results: list[Result]) -> str:
     return generate.generate_answer(question, results[: config.SYNTH_CONTEXT_K])
 
 
-def run(question: str, top_k: int | None = None) -> tuple[list[Result], str]:
+def run(
+    question: str, top_k: int | None = None, mode: str | None = None
+) -> tuple[list[Result], str]:
     """Decompose -> multi-hop retrieve -> merge -> synthesize. Returns (merged_results, answer).
 
     `top_k` sets how many excerpts to pull per sub-question (defaults to AGENT_SUBQ_TOP_K);
-    the merged list can be longer, since it unions every hop.
+    the merged list can be longer, since it unions every hop. `mode` is forwarded to every
+    hop so a caller comparing retrieval modes gets the same one on both routes.
     """
     per_hop = top_k or config.AGENT_SUBQ_TOP_K
     subqs = decompose(question)
@@ -84,10 +88,16 @@ def run(question: str, top_k: int | None = None) -> tuple[list[Result], str]:
     result_lists = []
     for i, sq in enumerate(subqs, start=1):
         trace.step(f"AGENT - multi-hop retrieve, sub-question {i}/{len(subqs)}: {sq!r}")
-        result_lists.append(retrieve.retrieve(sq, top_k=per_hop))
+        result_lists.append(retrieve.retrieve(sq, top_k=per_hop, mode=mode))
 
     merged = _merge(result_lists)
     trace.step("AGENT - merge sub-question results (round-robin, dedup by chunk id)")
+    trace.event(
+        "merge",
+        order=[r.id for r in merged],
+        per_hop=[[r.id for r in rl] for rl in result_lists],
+        dropped=sum(len(rl) for rl in result_lists) - len(merged),
+    )
     trace.detail("merged excerpts", len(merged))
     trace.results(merged)
 

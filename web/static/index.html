@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UBC Calendar RAG — live demo</title>
+<link rel="stylesheet" href="/static/panels.css">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div>
+      <h1>UBC Academic Calendar <span class="accent">RAG</span></h1>
+      <p class="tagline">An adaptive retrieval pipeline, with its internals on display —
+        routing, query decomposition, hybrid retrieval and reranking, all visible as they run.</p>
+    </div>
+    <div class="status" id="status" aria-live="polite">
+      <span class="dot" id="status-dot"></span><span id="status-text">connecting…</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="ask" aria-label="Ask a question">
+    <form id="ask-form" autocomplete="off">
+      <div class="ask-row">
+        <input id="question" name="question" type="text" maxlength="300"
+               placeholder="Ask about UBC courses, programs, or policies…"
+               aria-label="Your question">
+        <button type="submit" id="submit-btn">Run pipeline</button>
+      </div>
+      <div class="ask-controls">
+        <label class="server-only">Retrieval
+          <select id="mode" aria-label="Retrieval mode">
+            <option value="hybrid_rerank">hybrid + rerank</option>
+            <option value="hybrid">hybrid (dense + BM25)</option>
+            <option value="dense">dense only</option>
+          </select>
+        </label>
+        <label class="server-only">Route
+          <select id="route" aria-label="Route override">
+            <option value="auto">auto (let the router decide)</option>
+            <option value="simple">force simple</option>
+            <option value="complex">force agentic</option>
+          </select>
+        </label>
+        <span class="budget" id="budget"></span>
+      </div>
+    </form>
+
+    <div class="examples">
+      <span class="examples-label">Recorded pipeline runs — click one to watch it execute:</span>
+      <div id="examples" class="chips"></div>
+      <div id="no-match" class="empty" hidden>No recorded run matches that.</div>
+    </div>
+
+    <p class="static-only static-note">
+      This page is a <strong>recording</strong>, not a live service. Every run below was
+      produced by the real pipeline and captured frame by frame, so what you see is exactly
+      what the engine did — but the page ships no API keys and calls nothing, so it can only
+      replay the questions that were recorded. To ask your own, run the project locally:
+      <code>uvicorn web.app:app</code>.
+    </p>
+
+    <div id="notice" class="notice" hidden></div>
+  </section>
+
+  <section class="panes">
+    <div class="pane">
+      <h2>Pipeline</h2>
+      <p class="pane-hint">Each step expands to show the exact prompt sent to the model
+        and the reply that came back.</p>
+      <ol id="trace" class="trace"></ol>
+      <div id="trace-empty" class="empty">Ask a question, or pick a precomputed run, to
+        watch the pipeline execute.</div>
+    </div>
+
+    <div class="pane">
+      <h2>Retrieval</h2>
+      <p class="pane-hint">Dense and BM25 each nominate candidates; RRF fuses the two
+        rankings; the cross-encoder rescores the shortlist. Overlapping ids are highlighted.</p>
+      <div id="retrieval"></div>
+      <div id="retrieval-empty" class="empty">Candidate documents will appear here.</div>
+    </div>
+  </section>
+
+  <section class="answer-section" id="answer-section" hidden>
+    <h2>Answer <span class="route-badge" id="answer-route"></span></h2>
+    <div id="answer" class="answer"></div>
+    <div id="sources" class="sources"></div>
+  </section>
+
+  <footer>
+    <p>Excerpts are quoted from the
+      <a href="https://vancouver.calendar.ubc.ca" target="_blank" rel="noopener noreferrer">UBC
+      Vancouver Academic Calendar</a> and every result links back to its official page, which
+      is always authoritative. This is an unofficial educational demo — not academic advice.</p>
+  </footer>
+</main>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

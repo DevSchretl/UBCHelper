@@ -1,6 +1,6 @@
-# UBCHelper eval — sweep-hybrid-rerank
+# UBCHelper eval — final-check
 
-2026-08-31T00:32:59 · 12 questions · k=4 · judge off
+2026-09-06T11:42:46 · 12 questions · k=4 · judge off
 
 Models: chat=`google/gemma-4-e4b`, judge=`google/gemma-4-e4b`, embed=`text-embedding-3-small` · corpus=3770 · retrieval=hybrid_rerank
 

@@ -109,6 +109,31 @@ def _as_results(ranked: list[tuple[int, float]], limit: int) -> list[Result]:
     return [Result(id=i, score=s, recipe=metadata[i]) for i, s in ranked[:limit]]
 
 
+def _candidates(ranked: list[tuple[int, float]]) -> list[dict]:
+    """Render a ranked (id, score) list for the trace event stream.
+
+    Just enough to show a candidate column in a UI — the full record follows on the final
+    results, so there is no point carrying 20 chunk bodies per stage.
+    """
+    _, metadata = _load_index()
+    return [
+        {"id": i, "score": round(float(s), 6), "title": metadata[i]["title"]}
+        for i, s in ranked
+    ]
+
+
+def warmup() -> int:
+    """Load the index and build the BM25 postings up front; returns the chunk count.
+
+    Both are lazily cached module globals, so without this the *first* query of a process
+    pays the 22 MB .npy load plus the in-memory BM25 build. Fine for the CLI, bad for the
+    first visitor to a web demo.
+    """
+    _, metadata = _load_index()
+    bm25.search("warmup", 1, _corpus_texts())
+    return len(metadata)
+
+
 def retrieve(query: str, top_k: int | None = None, mode: str | None = None) -> list[Result]:
     """Return the top_k excerpts most relevant to `query`, best first.
 
@@ -122,24 +147,36 @@ def retrieve(query: str, top_k: int | None = None, mode: str | None = None) -> l
         sys.exit(
             f"Unknown retrieval mode {mode!r} — expected dense, hybrid, or hybrid_rerank."
         )
+    # The query is echoed so a consumer can attribute this whole block to the right hop of
+    # a multi-hop agent run without having to infer boundaries from the surrounding steps.
+    trace.event("retrieval_start", query=query, mode=mode, top_k=top_k)
     trace.detail("retrieve mode", mode)
     trace.detail("embed query (OpenAI API)", repr(query))
 
     if mode == "dense":
-        out = _as_results(_dense_search(query, top_k), top_k)
+        dense_hits = _dense_search(query, top_k)
+        trace.event("candidates", stage="dense", items=_candidates(dense_hits))
+        out = _as_results(dense_hits, top_k)
         trace.results(out)
+        trace.event("retrieval_final", query=query, items=[trace.describe(r) for r in out])
         return out
 
     # Stage 1 — recall: each retriever nominates candidates, RRF merges the rankings.
-    dense_ids = [i for i, _ in _dense_search(query, config.DENSE_K)]
-    sparse_ids = [i for i, _ in bm25.search(query, config.SPARSE_K, _corpus_texts())]
+    dense_hits = _dense_search(query, config.DENSE_K)
+    sparse_hits = bm25.search(query, config.SPARSE_K, _corpus_texts())
+    dense_ids = [i for i, _ in dense_hits]
+    sparse_ids = [i for i, _ in sparse_hits]
     fused = _rrf_fuse([dense_ids, sparse_ids])
+    trace.event("candidates", stage="dense", items=_candidates(dense_hits))
+    trace.event("candidates", stage="bm25", items=_candidates(sparse_hits))
+    trace.event("candidates", stage="rrf", items=_candidates(fused))
     trace.detail("stage 1 recall", f"dense={len(dense_ids)} + bm25={len(sparse_ids)} "
                                    f"-> RRF-fused to {len(fused)} unique")
 
     if mode == "hybrid":
         out = _as_results(fused, top_k)
         trace.results(out)
+        trace.event("retrieval_final", query=query, items=[trace.describe(r) for r in out])
         return out
 
     # Stage 2 — precision: the cross-encoder re-scores the fused shortlist.
@@ -147,10 +184,12 @@ def retrieve(query: str, top_k: int | None = None, mode: str | None = None) -> l
     from . import rerank
 
     shortlist = _as_results(fused, config.RERANK_CANDIDATES)
+    trace.event("shortlist", ids=[r.id for r in shortlist])
     trace.detail("stage 2 precision", f"rerank {len(shortlist)} candidates (Cohere API) "
                                       f"-> top {top_k}")
     out = rerank.rerank(query, shortlist, top_k)
     trace.results(out)
+    trace.event("retrieval_final", query=query, items=[trace.describe(r) for r in out])
     return out
 
 

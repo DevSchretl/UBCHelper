@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+.git/
+.env
+
+# Pulled at runtime from the private dataset repo, never baked into the image.
+index/
+data/
+web/cache/
+
+eval/reports/
+*.md
+!README.md

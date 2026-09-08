@@ -1,0 +1,12 @@
+# Web demo only — kept separate so the core engine's dependency list (requirements.txt)
+# stays exactly what `ask.py` and the eval harness need.
+#
+#   pip install -r requirements.txt -r requirements-web.txt
+#   uvicorn web.app:app --port 8000
+
+fastapi>=0.115
+uvicorn[standard]>=0.30
+
+# Pulls the prebuilt index from a private HF Dataset repo at container start
+# (see web/bootstrap.py). Not needed when running against a locally built index/.
+huggingface_hub>=0.25

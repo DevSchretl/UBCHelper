@@ -1,0 +1,125 @@
+/* Page chrome for the standalone builds (FastAPI server + static Space): masthead, ask bar,
+   example chips, pane frames, footer. Load AFTER panels.css, which owns the design tokens
+   and everything inside the panels.
+
+   The Gradio Space loads panels.css ONLY — Gradio draws its own page, and the element
+   selectors below (button, select, body) would restyle its widgets. */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+a { color: var(--blue); }
+
+/* ---- masthead ---- */
+.masthead {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.masthead-inner {
+  max-width: 1360px; margin: 0 auto; padding: 20px 24px;
+  display: flex; gap: 24px; align-items: flex-start; justify-content: space-between;
+  flex-wrap: wrap;
+}
+h1 { margin: 0 0 4px; font-size: 21px; letter-spacing: -0.01em; }
+h1 .accent { color: var(--blue); }
+.tagline { margin: 0; color: var(--ink-soft); font-size: 13.5px; max-width: 62ch; }
+
+.status {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12.5px; color: var(--ink-soft); white-space: nowrap;
+}
+.dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--ink-faint); flex: none;
+}
+.dot.ok { background: #22c55e; }
+.dot.warn { background: #f59e0b; }
+.dot.err { background: #ef4444; }
+
+main { max-width: 1360px; margin: 0 auto; padding: 20px 24px 48px; }
+
+/* ---- ask ---- */
+.ask {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px; margin-bottom: 18px;
+}
+.ask-row { display: flex; gap: 10px; }
+#question {
+  flex: 1; padding: 11px 13px; font-size: 15px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg); color: var(--ink);
+}
+#question:focus { outline: 2px solid var(--blue); outline-offset: -1px; }
+button {
+  padding: 11px 20px; font-size: 14px; font-weight: 600;
+  background: var(--blue); color: #fff; border: 0; border-radius: 8px; cursor: pointer;
+  white-space: nowrap;
+}
+button:hover:not(:disabled) { filter: brightness(1.1); }
+button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.ask-controls {
+  display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+  margin-top: 11px; font-size: 12.5px; color: var(--ink-soft);
+}
+.ask-controls label { display: flex; align-items: center; gap: 6px; }
+select {
+  font: inherit; padding: 4px 7px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--bg); color: var(--ink);
+}
+.budget { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--ink-faint); }
+
+.examples { margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--border); }
+.examples-label { font-size: 12.5px; color: var(--ink-soft); display: block; margin-bottom: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip {
+  font: inherit; font-size: 12.5px; font-weight: 500;
+  padding: 6px 11px; border-radius: 999px; cursor: pointer;
+  background: var(--blue-soft); color: var(--blue);
+  border: 1px solid transparent; text-align: left;
+}
+.chip:hover { border-color: var(--blue); filter: none; }
+.chip .chip-cat {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em;
+  opacity: 0.7; margin-left: 6px;
+}
+
+/* Mode switching: the same markup serves the FastAPI build and the static Space, so each
+   mode hides the controls the other one owns. `static-mode` is set by app.js at startup. */
+.static-only { display: none; }
+body.static-mode .static-only { display: block; }
+body.static-mode .server-only { display: none; }
+
+.static-note {
+  margin: 13px 0 0; padding: 11px 13px; border-radius: 8px;
+  font-size: 12.5px; line-height: 1.6; color: var(--ink-soft);
+  background: var(--blue-soft); border: 1px solid var(--border);
+}
+.static-note code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: var(--surface); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--border);
+}
+body.static-mode .chip[hidden] { display: none; }
+
+/* ---- panes ---- */
+.panes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+@media (max-width: 1080px) { .panes { grid-template-columns: minmax(0, 1fr); } }
+
+.pane {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px; min-width: 0;
+}
+.pane h2 { margin: 0 0 3px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); }
+.pane-hint { margin: 0 0 14px; font-size: 12.5px; color: var(--ink-faint); }
+
+footer {
+  margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--ink-faint);
+}
+footer p { margin: 0; max-width: 90ch; }

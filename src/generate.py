@@ -22,6 +22,8 @@ callers and the eval loop don't care which backend is active.
 
 from __future__ import annotations
 
+import time
+
 from . import config, trace
 from .retrieve import Result
 
@@ -111,24 +113,36 @@ def build_user_turn(query: str, results: list[Result]) -> str:
     )
 
 
-def complete(system: str, user: str) -> str:
+def complete(system: str, user: str, purpose: str = "complete") -> str:
     """One-shot completion via the configured backend, for callers that build their own
     prompt (the Phase-4 router and agent) rather than the grounded calendar turn."""
-    return _complete(system, user)
+    return _complete(system, user, purpose)
 
 
-def _complete(system: str, user: str) -> str:
+def _complete(system: str, user: str, purpose: str = "generate") -> str:
     """Dispatch one (system, user) turn to the configured backend and return the text.
 
     Every LLM call in the project funnels through here, so this is the one place that traces
-    the exact prompt sent to the API (when tracing is on; a no-op otherwise).
+    the exact prompt sent to the API (when tracing is on; a no-op otherwise). `purpose`
+    labels which stage asked for the call, so a consumer can attribute it without having to
+    fingerprint the system prompt.
     """
     model = config.ANTHROPIC_MODEL if config.LLM_BACKEND == "anthropic" else config.CHAT_MODEL
     trace.prompt(system, user, model)
+    started = time.perf_counter()
     if config.LLM_BACKEND == "anthropic":
         text = _complete_anthropic(system, user)
     else:
         text = _complete_local(system, user)
+    trace.event(
+        "llm_call",
+        purpose=purpose,
+        model=model,
+        system=system,
+        user=user,
+        reply=text,
+        ms=round((time.perf_counter() - started) * 1000),
+    )
     trace.response(text)
     return text
 
@@ -166,9 +180,9 @@ def _complete_anthropic(system: str, user: str) -> str:
 
 def generate_answer(query: str, results: list[Result]) -> str:
     """Answer the question grounded in the retrieved calendar excerpts."""
-    return _complete(SYSTEM_PROMPT, build_user_turn(query, results))
+    return _complete(SYSTEM_PROMPT, build_user_turn(query, results), purpose="answer")
 
 
 def generate_answer_closed_book(query: str) -> str:
     """Answer with NO retrieved context — the no-RAG baseline for the ablation harness."""
-    return _complete(CLOSED_BOOK_SYSTEM, query)
+    return _complete(CLOSED_BOOK_SYSTEM, query, purpose="closed_book")

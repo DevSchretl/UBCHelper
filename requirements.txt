@@ -14,6 +14,10 @@ python-dotenv>=1.0
 # The reranker runs on Cohere's hosted rerank API (only the hybrid_rerank mode needs it).
 cohere>=5.0
 
+# The hosted demo pulls its prebuilt index from a private Hub dataset at startup
+# (web/bootstrap.py). Imported lazily, so a local run with an existing index/ never needs it.
+huggingface_hub>=0.25
+
 # --- Data layer: scraping the UBC Vancouver Academic Calendar ---
 # Plain HTTP GETs (the site is server-rendered Drupal 11 — no headless browser needed) +
 # HTML parsing. lxml is BeautifulSoup's fast parser backend.

@@ -13,8 +13,23 @@ data/courses.jsonl
 # Local secrets / env overrides — never commit. The template .env.example IS committed.
 .env
 
+# Precomputed demo runs — generated, and they embed calendar excerpt text.
+# Rebuild with `python scripts/build_demo_cache.py`.
+web/cache/
+
+# The built static site. Generated output, and its own git repo pushed to the HF Space.
+# Rebuild with `python scripts/build_static_site.py`.
+site/
+
+# The demo's rate-limit / usage database.
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+
 # Python noise
 __pycache__/
 *.pyc
 
 can-you-create-a-rippling-pearl.md
+DEPLOY.md
+Dockerfile

@@ -28,7 +28,7 @@ def answer(
     trace.step(f"PIPELINE - answer: {question!r}")
     route = route or router.classify(question)
     if route == "complex":
-        results, ans = agent.run(question, top_k=top_k)
+        results, ans = agent.run(question, top_k=top_k, mode=mode)
     else:
         trace.step("RETRIEVE - simple route (single query)")
         results = retrieve.retrieve(question, top_k=top_k, mode=mode)

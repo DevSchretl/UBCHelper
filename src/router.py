@@ -32,7 +32,8 @@ CLASSIFY_SYSTEM = (
 def classify(question: str) -> str:
     """Return "simple" or "complex" for `question`. Defaults to "simple" on any surprise."""
     trace.step("ROUTE - classify (simple vs complex)")
-    reply = generate.complete(CLASSIFY_SYSTEM, question).strip().lower()
+    reply = generate.complete(CLASSIFY_SYSTEM, question, purpose="route").strip().lower()
     route = "complex" if "complex" in reply else "simple"
+    trace.event("route", decision=route, raw_reply=reply)
     trace.detail("decision", route)
     return route
