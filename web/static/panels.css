@@ -1,6 +1,6 @@
 /* Panel styles shared by every delivery mode: the FastAPI page, the static Space, and the
    Gradio Space. Deliberately contains NO element selectors (no `body`, `button`, `select`)
-   and no page-chrome layout — Gradio owns the page around these panels, and restyling its
+   and no page-chrome layout. Gradio owns the page around these panels, and restyling its
    widgets from here would fight it. Page chrome lives in styles.css instead. */
 
 :root {
