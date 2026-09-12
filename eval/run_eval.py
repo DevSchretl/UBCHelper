@@ -127,6 +127,9 @@ def _aggregate(per_item: list[dict], k: int, do_judge: bool) -> dict:
 
 HISTORY_COLUMNS = [
     "timestamp", "name", "k", "num_questions", "judged",
+    # The two knobs that move retrieval most. Without them a sweep's rows are distinguishable
+    # only by their --name label, which is no use comparing runs across a corpus change.
+    "retrieval_mode", "corpus_size",
     "chat_model", "judge_model",
     "hit@k", "recall@k", "mrr",
     "faithfulness", "answer_relevancy", "context_precision", "context_recall",
@@ -228,6 +231,8 @@ def _append_history(report: dict, name: str) -> None:
         "k": run["k"],
         "num_questions": run["num_questions"],
         "judged": run["judged"],
+        "retrieval_mode": run["retrieval_mode"],
+        "corpus_size": run["corpus_size"],
         "chat_model": run["chat_model"],
         "judge_model": run["judge_model"],
         "hit@k": ret["hit@k"],
@@ -240,6 +245,17 @@ def _append_history(report: dict, name: str) -> None:
         "hallucination_rate": report["aggregate"]["hallucination_rate"],
     }
     is_new = not config.HISTORY_PATH.exists()
+    if not is_new:
+        # Appending a row in a new column order under an old header silently shifts every
+        # value into the wrong column, so refuse rather than corrupt the ledger.
+        with open(config.HISTORY_PATH, "r", encoding="utf-8", newline="") as f:
+            header = next(csv.reader(f), [])
+        if header != HISTORY_COLUMNS:
+            raise SystemExit(
+                f"{config.HISTORY_PATH} header does not match HISTORY_COLUMNS.\n"
+                f"  file: {header}\n  code: {HISTORY_COLUMNS}\n"
+                f"Migrate the existing rows to the new columns before appending."
+            )
     with open(config.HISTORY_PATH, "a", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=HISTORY_COLUMNS)
         if is_new:

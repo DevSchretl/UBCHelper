@@ -54,7 +54,7 @@ async def stream(slug: str):
     """Yield the cached run's frames with human-paced delays."""
     run = load().get(slug)
     if run is None:
-        yield sse("error", {"message": "That example is not available."})
+        yield sse("error", {"message": "That saved run is not available."})
         return
 
     yield sse(

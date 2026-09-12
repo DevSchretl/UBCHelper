@@ -142,7 +142,7 @@ function addPromptDetails(call) {
   const details = document.createElement('details');
   details.className = 'prompt';
   details.innerHTML =
-    `<summary>prompt &amp; reply — ${esc(call.model)} · ${call.ms} ms</summary>
+    `<summary>prompt and reply · ${esc(call.model)} · ${call.ms} ms</summary>
      <div class="prompt-body">
        <h4>System</h4><pre>${esc(call.system)}</pre>
        <h4>User</h4><pre>${esc(call.user)}</pre>
@@ -160,15 +160,15 @@ function startHop(query) {
   const block = document.createElement('div');
   block.className = 'hop';
   block.innerHTML =
-    `<div class="hop-head"><strong>${esc(label)}</strong> — <span class="q"></span></div>
+    `<div class="hop-head"><strong>${esc(label)}:</strong> <span class="q"></span></div>
      <div class="columns">
-       <div class="column dense"><h3>Dense <span></span></h3><ul class="cand-list"></ul></div>
-       <div class="column bm25"><h3>BM25 <span></span></h3><ul class="cand-list"></ul></div>
-       <div class="column rrf"><h3>RRF fused <span></span></h3><ul class="cand-list"></ul></div>
+       <div class="column dense"><h3>Vector <span></span></h3><ul class="cand-list"></ul></div>
+       <div class="column bm25"><h3>Keyword <span></span></h3><ul class="cand-list"></ul></div>
+       <div class="column rrf"><h3>Fused <span></span></h3><ul class="cand-list"></ul></div>
      </div>
      <p class="cand-legend">
        <span class="swatch sl"></span><b>shortlisted</b> for reranking &nbsp;·&nbsp;
-       <span class="swatch sv"></span><b>survived</b> into the final top-k
+       <span class="swatch sv"></span><b>kept</b> in the final results
      </p>
      <div class="finals"></div>`;
   block.querySelector('.q').textContent = query;
@@ -200,7 +200,7 @@ function renderFinals(items) {
   if (!state.hop) return;
   state.hop.querySelector('.finals').innerHTML =
     `<h3 class="column"><span style="font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--final)">
-       Final top-${items.length}</span></h3>` + items.map(docCard).join('');
+       Final ${items.length}</span></h3>` + items.map(docCard).join('');
   markCandidates(items.map((d) => d.id), 'survivor');
 }
 
@@ -241,7 +241,7 @@ el.retrieval.addEventListener('click', (ev) => {
 function renderAnswer(text, route) {
   el.answerSection.hidden = false;
   el.answer.textContent = text;
-  el.answerRoute.textContent = route === 'complex' ? 'agentic route' : 'simple route';
+  el.answerRoute.textContent = route === 'complex' ? 'multi-step' : 'single-shot';
 
   const ids = state.order.length ? state.order : [...state.docs.keys()];
   const seen = new Set();
@@ -253,7 +253,7 @@ function renderAnswer(text, route) {
     links.push(`<li><a href="${esc(doc.url)}" target="_blank" rel="noopener noreferrer">${esc(doc.title)}</a></li>`);
   }
   el.sources.innerHTML = links.length
-    ? `<h3>Grounded in ${links.length} calendar page${links.length > 1 ? 's' : ''}</h3><ul>${links.join('')}</ul>`
+    ? `<h3>Based on ${links.length} calendar page${links.length > 1 ? 's' : ''}</h3><ul>${links.join('')}</ul>`
     : '';
 }
 
@@ -266,7 +266,7 @@ function handle(name, data) {
       // In static mode the standing note above the chips already says everything is a
       // recording, so flashing a banner on every click would just be noise.
       if (data.replay && !STATIC) {
-        note('Replaying a precomputed run — no API calls, nothing metered.');
+        note('Playing back a saved run. No API calls, nothing metered.');
       }
       break;
 
@@ -279,10 +279,10 @@ function handle(name, data) {
       break;
 
     case 'route':
-      stepMeta(`Classified as <strong>${esc(data.decision)}</strong> — ` +
+      stepMeta(`Classified as <strong>${esc(data.decision)}</strong>, so it gets ` +
                (data.decision === 'complex'
-                 ? 'decomposed and retrieved per sub-question.'
-                 : 'answered from a single retrieval.'));
+                 ? 'split into sub-questions and searched one at a time.'
+                 : 'answered from a single search.'));
       break;
 
     case 'subquestions': {
@@ -317,7 +317,7 @@ function handle(name, data) {
 
     case 'merge':
       state.order = data.order;
-      stepMeta(`Interleaved ${data.per_hop.length} rankings round-robin → ` +
+      stepMeta(`Interleaved ${data.per_hop.length} rankings to give ` +
                `<strong>${data.order.length}</strong> unique excerpts ` +
                `(${data.dropped} duplicate${data.dropped === 1 ? '' : 's'} dropped).`);
       break;
@@ -331,7 +331,7 @@ function handle(name, data) {
       state.step = null;
       if (!data.replay && data.api_calls) {
         const c = data.api_calls;
-        note(`Done in ${(data.ms / 1000).toFixed(1)}s — ${c.llm} model call${c.llm === 1 ? '' : 's'}, ` +
+        note(`Done in ${(data.ms / 1000).toFixed(1)}s using ${c.llm} model call${c.llm === 1 ? '' : 's'}, ` +
              `${c.embed} embedding${c.embed === 1 ? '' : 's'}, ${c.rerank} rerank${c.rerank === 1 ? '' : 's'}.`);
       }
       refreshUsage();
@@ -360,7 +360,7 @@ function staticRun(slug) {
 async function replayLocal(slug) {
   const runData = staticRun(slug);
   if (!runData) {
-    handle('error', { message: 'That example is not available.' });
+    handle('error', { message: 'That saved run is not available.' });
     return;
   }
   handle('accepted', {
@@ -387,7 +387,7 @@ async function run(target, question) {
   if (running) return;
   running = true;
   el.submit.disabled = true;
-  el.submit.textContent = 'Running…';
+  el.submit.textContent = 'Working…';
   resetRun(question);
 
   try {
@@ -396,13 +396,13 @@ async function run(target, question) {
   } catch (err) {
     if (err.name !== 'AbortError') {
       note(err.budgetExhausted
-        ? err.message + ' Pick one of the precomputed runs above to see the full pipeline.'
+        ? err.message + ' Pick one of the saved runs above to see the whole thing work.'
         : err.message);
     }
   } finally {
     running = false;
     el.submit.disabled = false;
-    el.submit.textContent = STATIC ? 'Filter' : 'Run pipeline';
+    el.submit.textContent = STATIC ? 'Filter' : 'Ask';
     if (state.step) state.step.classList.replace('active', 'done');
     refreshUsage();
   }
@@ -457,7 +457,7 @@ function renderExamples(examples) {
 function renderUsage(usage) {
   if (!usage) return;
   el.budget.textContent = usage.budget_exhausted
-    ? 'daily budget spent — precomputed runs still available'
+    ? 'out of model calls for today, saved runs still work'
     : `${usage.llm_calls_remaining}/${usage.llm_calls_limit} model calls left today · ` +
       `${usage.per_ip_hour}/hour per visitor`;
 }
@@ -482,7 +482,7 @@ function initStatic() {
   const meta = window.DEMO_RUNS;
   document.body.classList.add('static-mode');
 
-  el.question.placeholder = `Filter ${meta.runs.length} recorded runs…`;
+  el.question.placeholder = `Filter ${meta.runs.length} saved runs…`;
   el.submit.textContent = 'Filter';
   el.budget.textContent = 'no API keys, nothing metered';
   el.statusDot.className = 'dot ok';

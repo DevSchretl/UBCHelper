@@ -3,7 +3,7 @@ Retrieve — given a question, return the most relevant calendar excerpts.
 
 This is the "R" in RAG. Phase 2 turns it into a two-stage funnel:
 
-    stage 1 — RECALL     dense (vector) and sparse (BM25) search each nominate ~20
+    stage 1 — RECALL     dense (vector) and sparse (BM25) search each nominate ~50
                          candidates; Reciprocal Rank Fusion merges the two rankings.
     stage 2 — PRECISION  a cross-encoder re-scores the fused shortlist jointly with
                          the query; the final top-k come out the top.

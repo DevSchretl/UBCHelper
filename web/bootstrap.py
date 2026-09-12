@@ -1,7 +1,7 @@
 """Fetch the built index at startup.
 
 `index/` is gitignored and must stay that way. `index/metadata.json` carries the full text
-of all 3,770 chunks, so committing it to a public Space repo would republish the UBC
+of all 16,576 chunks, so committing it to a public Space repo would republish the UBC
 corpus in bulk — exactly what .gitignore avoids for `data/pages/`, citing UBC's Terms of
 Use. The demo quoting excerpts with a link back to the official page is ordinary
 attribution; shipping the corpus as a downloadable artifact is not.
@@ -9,9 +9,10 @@ attribution; shipping the corpus as a downloadable artifact is not.
 So the index lives in a **private** Hugging Face Dataset repo and is pulled at container
 start with a token held as a Space secret. Upload it with `scripts/publish_index.py`.
 
-`DEMO_INDEX_REVISION` should be pinned. The testsets' `gold_ids` are positional chunk ids
-valid only for the specific index build they were written against, so an unpinned repo
-would let a re-ingest silently invalidate both the eval and the cached demo runs.
+`DEMO_INDEX_REVISION` should be pinned. Chunk ids are positional, so a re-ingest renumbers
+them: the test sets survive that because they carry `gold_keys` and resolve them at load time
+(eval/retrieval_metrics.py), but the cached demo runs hold raw ids and do not, so an unpinned
+repo would let a re-ingest silently desync the recorded runs from the index.
 """
 
 from __future__ import annotations

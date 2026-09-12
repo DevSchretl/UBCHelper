@@ -152,8 +152,8 @@ def check(ip_hash: str) -> Decision:
             # shared by all three.
             return Decision(
                 allowed=False,
-                reason="The demo's daily API budget is used up. The live pipeline resets "
-                       "at 00:00 UTC.",
+                reason="This demo is out of model calls for today. The limit resets at "
+                       "00:00 UTC.",
                 budget_exhausted=True,
             )
 
@@ -168,7 +168,7 @@ def check(ip_hash: str) -> Decision:
             wait = max(1, int(oldest + HOUR - now))
             return Decision(
                 allowed=False,
-                reason=f"Rate limit: {IP_PER_HOUR} live questions per hour. "
+                reason=f"You have used your {IP_PER_HOUR} questions for this hour. "
                        f"Try again in about {max(1, round(wait / 60))} minutes.",
                 retry_after=wait,
             )
@@ -179,7 +179,7 @@ def check(ip_hash: str) -> Decision:
         if day_count >= IP_PER_DAY:
             return Decision(
                 allowed=False,
-                reason=f"Rate limit: {IP_PER_DAY} live questions per day.",
+                reason=f"You have used your {IP_PER_DAY} questions for today.",
                 retry_after=DAY,
             )
 

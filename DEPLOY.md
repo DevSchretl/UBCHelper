@@ -58,7 +58,7 @@ hf auth whoami        # this name is <you> below — probably not your GitHub us
 ## 2. Publish the index privately
 
 `index/` is gitignored and must stay that way: `index/metadata.json` holds the full text of all
-3,770 chunks, and UBC's Terms of Use don't permit republishing the calendar in bulk (the same
+16,576 chunks, and UBC's Terms of Use don't permit republishing the calendar in bulk (the same
 reason `data/pages/` is excluded). The Space pulls it at startup instead.
 
 ```powershell
@@ -147,11 +147,11 @@ A healthy startup logs exactly two lines from [app.py](app.py):
 
 ```
 [demo] index pulled from <you>/ubchelper-index@<sha>
-[demo] warm: 3770 chunks, mode=hybrid_rerank, model=claude-haiku-4-5
+[demo] warm: 16576 chunks, mode=hybrid_rerank, model=claude-haiku-4-5
 ```
 
 Then open the Space and click a "Try one" example. Startup work is ~2 s (index load + BM25
-postings build) on top of the 29 MB download, so a cold start is on the order of half a minute.
+postings build) on top of the 128 MB download, so the download dominates a cold start.
 
 **Changing a secret or variable requires a restart** — `hf spaces restart <you>/ubc-calendar-rag`.
 

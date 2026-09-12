@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>UBC Calendar RAG — live demo</title>
+<title>Ask the UBC Academic Calendar</title>
 <link rel="stylesheet" href="/static/panels.css">
 <link rel="stylesheet" href="/static/styles.css">
 </head>
@@ -12,9 +12,9 @@
 <header class="masthead">
   <div class="masthead-inner">
     <div>
-      <h1>UBC Academic Calendar <span class="accent">RAG</span></h1>
-      <p class="tagline">An adaptive retrieval pipeline, with its internals on display —
-        routing, query decomposition, hybrid retrieval and reranking, all visible as they run.</p>
+      <h1>Ask the UBC Academic <span class="accent">Calendar</span></h1>
+      <p class="tagline">A search-and-answer pipeline that shows its work: how a question
+        gets routed, what each search turns up, and which excerpts make the final cut.</p>
     </div>
     <div class="status" id="status" aria-live="polite">
       <span class="dot" id="status-dot"></span><span id="status-text">connecting…</span>
@@ -29,21 +29,21 @@
         <input id="question" name="question" type="text" maxlength="300"
                placeholder="Ask about UBC courses, programs, or policies…"
                aria-label="Your question">
-        <button type="submit" id="submit-btn">Run pipeline</button>
+        <button type="submit" id="submit-btn">Ask</button>
       </div>
       <div class="ask-controls">
-        <label class="server-only">Retrieval
-          <select id="mode" aria-label="Retrieval mode">
-            <option value="hybrid_rerank">hybrid + rerank</option>
-            <option value="hybrid">hybrid (dense + BM25)</option>
-            <option value="dense">dense only</option>
+        <label class="server-only">Search
+          <select id="mode" aria-label="Search mode">
+            <option value="hybrid_rerank">Hybrid + rerank</option>
+            <option value="hybrid">Hybrid: vector + keyword</option>
+            <option value="dense">Vector search only</option>
           </select>
         </label>
         <label class="server-only">Route
           <select id="route" aria-label="Route override">
-            <option value="auto">auto (let the router decide)</option>
-            <option value="simple">force simple</option>
-            <option value="complex">force agentic</option>
+            <option value="auto">Auto: let the router pick</option>
+            <option value="simple">Always single-shot</option>
+            <option value="complex">Always multi-step</option>
           </select>
         </label>
         <span class="budget" id="budget"></span>
@@ -51,16 +51,16 @@
     </form>
 
     <div class="examples">
-      <span class="examples-label">Recorded pipeline runs — click one to watch it execute:</span>
+      <span class="examples-label">Saved runs. Click one to watch it play back:</span>
       <div id="examples" class="chips"></div>
-      <div id="no-match" class="empty" hidden>No recorded run matches that.</div>
+      <div id="no-match" class="empty" hidden>No saved run matches that.</div>
     </div>
 
     <p class="static-only static-note">
-      This page is a <strong>recording</strong>, not a live service. Every run below was
-      produced by the real pipeline and captured frame by frame, so what you see is exactly
-      what the engine did — but the page ships no API keys and calls nothing, so it can only
-      replay the questions that were recorded. To ask your own, run the project locally:
+      This page plays back <strong>saved runs</strong>. Each one was recorded from the real
+      pipeline, step by step, so the routing, rankings and prompts you see are what actually
+      happened. The page itself holds no API keys and calls nothing, so it can only replay the
+      questions that were recorded. To ask your own, run the project locally with
       <code>uvicorn web.app:app</code>.
     </p>
 
@@ -69,20 +69,22 @@
 
   <section class="panes">
     <div class="pane">
-      <h2>Pipeline</h2>
-      <p class="pane-hint">Each step expands to show the exact prompt sent to the model
-        and the reply that came back.</p>
+      <h2>Steps</h2>
+      <p class="pane-hint">Open any step to see the prompt that went to the model and the
+        reply that came back.</p>
       <ol id="trace" class="trace"></ol>
-      <div id="trace-empty" class="empty">Ask a question, or pick a precomputed run, to
-        watch the pipeline execute.</div>
+      <div id="trace-empty" class="empty">Ask a question, or pick a saved run, and the steps
+        will show up here.</div>
     </div>
 
     <div class="pane">
-      <h2>Retrieval</h2>
-      <p class="pane-hint">Dense and BM25 each nominate candidates; RRF fuses the two
-        rankings; the cross-encoder rescores the shortlist. Overlapping ids are highlighted.</p>
+      <h2>Search results</h2>
+      <p class="pane-hint">Vector search and keyword search each put forward candidates, the
+        two rankings get fused, then the reranker rescores the shortlist. Ids that turn up in
+        both searches are highlighted.</p>
       <div id="retrieval"></div>
-      <div id="retrieval-empty" class="empty">Candidate documents will appear here.</div>
+      <div id="retrieval-empty" class="empty">The excerpts each search finds will show up
+        here.</div>
     </div>
   </section>
 
@@ -95,8 +97,9 @@
   <footer>
     <p>Excerpts are quoted from the
       <a href="https://vancouver.calendar.ubc.ca" target="_blank" rel="noopener noreferrer">UBC
-      Vancouver Academic Calendar</a> and every result links back to its official page, which
-      is always authoritative. This is an unofficial educational demo — not academic advice.</p>
+      Vancouver Academic Calendar</a>, and every result links to the page it came from. The
+      calendar is the official word, so check it there before you act on anything you read
+      here. This is a student project, not academic advising.</p>
   </footer>
 </main>
 

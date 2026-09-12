@@ -65,10 +65,10 @@ class Renderer:
 
     def _on_route(self, ev: dict) -> None:
         decision = ev["decision"]
-        tail = ("decomposed and retrieved per sub-question."
-                if decision == "complex" else "answered from a single retrieval.")
+        tail = ("split into sub-questions and searched one at a time."
+                if decision == "complex" else "answered from a single search.")
         self._step()["meta"].append(
-            f"Classified as <strong>{_e(decision)}</strong> — {tail}"
+            f"Classified as <strong>{_e(decision)}</strong>, so it gets {tail}"
         )
 
     def _on_subquestions(self, ev: dict) -> None:
@@ -78,7 +78,7 @@ class Renderer:
     def _on_llm_call(self, ev: dict) -> None:
         self._step()["extras"].append(
             '<details class="prompt">'
-            f'<summary>prompt &amp; reply — {_e(ev["model"])} · {ev["ms"]} ms</summary>'
+            f'<summary>prompt and reply · {_e(ev["model"])} · {ev["ms"]} ms</summary>'
             '<div class="prompt-body">'
             f'<h4>System</h4><pre>{_e(ev["system"])}</pre>'
             f'<h4>User</h4><pre>{_e(ev["user"])}</pre>'
@@ -90,7 +90,7 @@ class Renderer:
         self.order = ev["order"]
         dropped = ev["dropped"]
         self._step()["meta"].append(
-            f"Interleaved {len(ev['per_hop'])} rankings round-robin → "
+            f"Interleaved {len(ev['per_hop'])} rankings to give "
             f"<strong>{len(ev['order'])}</strong> unique excerpts "
             f"({dropped} duplicate{'' if dropped == 1 else 's'} dropped)."
         )
@@ -119,7 +119,7 @@ class Renderer:
     # ---------------------------------------------------------------- render
     def trace_html(self, running: bool = False) -> str:
         if not self.steps:
-            return '<div class="empty">Ask a question to watch the pipeline execute.</div>'
+            return '<div class="empty">Ask a question and the steps will show up here.</div>'
         rows = []
         for i, step in enumerate(self.steps):
             last = i == len(self.steps) - 1
@@ -133,7 +133,7 @@ class Renderer:
 
     def retrieval_html(self) -> str:
         if not self.hops:
-            return '<div class="empty">Candidate documents will appear here.</div>'
+            return '<div class="empty">The excerpts each search finds will show up here.</div>'
         blocks = []
         for i, hop in enumerate(self.hops, start=1):
             multi = len(self.hops) > 1 or hop["query"].strip() != self.question.strip()
@@ -142,25 +142,25 @@ class Renderer:
             columns = "".join(
                 _column(name, css, hop["columns"].get(key, []), hop["shortlist"], survivors)
                 for key, name, css in (
-                    ("dense", "Dense", "dense"),
-                    ("bm25", "BM25", "bm25"),
-                    ("rrf", "RRF fused", "rrf"),
+                    ("dense", "Vector", "dense"),
+                    ("bm25", "Keyword", "bm25"),
+                    ("rrf", "Fused", "rrf"),
                 )
             )
             finals = ""
             if hop["finals"]:
                 finals = (
                     '<div class="finals">'
-                    f'<h3 class="finals-head">Final top-{len(hop["finals"])}</h3>'
+                    f'<h3 class="finals-head">Final {len(hop["finals"])}</h3>'
                     + "".join(_doc_card(d) for d in hop["finals"]) + "</div>"
                 )
             blocks.append(
-                f'<div class="hop"><div class="hop-head"><strong>{_e(label)}</strong> — '
+                f'<div class="hop"><div class="hop-head"><strong>{_e(label)}:</strong> '
                 f'<span class="q">{_e(hop["query"])}</span></div>'
                 f'<div class="columns">{columns}</div>'
                 '<p class="cand-legend"><span class="swatch sl"></span><b>shortlisted</b> '
-                'for reranking &nbsp;·&nbsp; <span class="swatch sv"></span><b>survived</b> '
-                "into the final top-k</p>"
+                'for reranking &nbsp;·&nbsp; <span class="swatch sv"></span><b>kept</b> '
+                "in the final results</p>"
                 f"{finals}</div>"
             )
         return "".join(blocks)
@@ -177,7 +177,7 @@ class Renderer:
             return f"> {self.error}"
         if not self.answer_text:
             return ""
-        badge = "agentic route" if self.route == "complex" else "simple route"
+        badge = "multi-step" if self.route == "complex" else "single-shot"
         parts = [f"### Answer &nbsp;·&nbsp; *{badge}*", "", self.answer_text.strip()]
 
         seen, links = set(), []
@@ -189,7 +189,7 @@ class Renderer:
             links.append(f"- [{_md_link_text(doc['title'])}]({doc['url']})")
         if links:
             plural = "s" if len(links) > 1 else ""
-            parts += ["", f"**Grounded in {len(links)} calendar page{plural}**", ""] + links
+            parts += ["", f"**Based on {len(links)} calendar page{plural}**", ""] + links
         return "\n".join(parts)
 
     def panels(self, running: bool = False) -> tuple[str, str, str]:

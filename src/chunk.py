@@ -188,12 +188,53 @@ def _overlap_tail(text: str) -> str:
     return tail[i + 1:] if i != -1 else tail
 
 
+def _split_oversized(block: str) -> list[str]:
+    """Last-resort split of a single block that exceeds CHUNK_HARD_MAX_CHARS.
+
+    Tables are normally kept whole because half a requirement table answers nothing, but a
+    block the embedding model refuses answers nothing either, and it takes the whole ingest
+    down with it. So above the hard ceiling we split anyway, on row boundaries for a table and
+    on a blank line or space otherwise, to cut where it does least damage.
+    """
+    limit = config.CHUNK_HARD_MAX_CHARS
+    lines = block.split("\n")
+    header = lines[:2] if block.lstrip().startswith("|") else []
+    out, cur = [], ""
+    for line in lines:
+        if cur and len(cur) + len(line) + 1 > limit:
+            out.append(cur)
+            # Repeat the table header so each piece stays readable on its own.
+            cur = "\n".join(header) + "\n" + line if header else line
+        else:
+            cur = cur + "\n" + line if cur else line
+    if cur:
+        out.append(cur)
+    # A single line longer than the ceiling (one unbroken run of text) still has to be cut.
+    final = []
+    for piece in out:
+        while len(piece) > limit:
+            cut = piece.rfind(" ", 0, limit)
+            cut = cut if cut > limit // 2 else limit
+            final.append(piece[:cut])
+            piece = piece[cut:].lstrip()
+        if piece:
+            final.append(piece)
+    return final
+
+
 def chunk_body(body_md: str) -> list[str]:
     blocks = [b.strip() for b in re.split(r"\n\s*\n", body_md) if b.strip()]
     chunks: list[str] = []
     cur = ""
     for b in blocks:
         is_table = b.lstrip().startswith("|")
+        if len(b) > config.CHUNK_HARD_MAX_CHARS:
+            # Too big to embed at all, table or not. Split before anything else looks at it.
+            if cur:
+                chunks.append(cur)
+                cur = ""
+            chunks.extend(_split_oversized(b))
+            continue
         if is_table and len(b) > config.CHUNK_MAX_CHARS:
             if cur:
                 chunks.append(cur)
@@ -333,6 +374,23 @@ def compose_text(title: str, section: str, heading: str | None, body: str) -> st
     return f"{head}\n\n{body}".strip()
 
 
+def _heading_slug(heading: str | None) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", (heading or "").lower()).strip("-")
+    return slug[:60] or "body"
+
+
+def compose_chunk_key(source: str, path_key: str, heading: str | None, ordinal: int) -> str:
+    """A chunk identifier that survives a re-ingest, unlike the positional `id`.
+
+    `id` is the chunk's global position across all pages (assigned in ingest), so adding or
+    removing any page silently renumbers everything after it — which is what invalidates the
+    eval's gold ids. This key instead names the chunk by where it came from: edition + page +
+    heading + which chunk under that heading. It changes only if UBC restructures the page's
+    headings, and the eval's resolver raises loudly when that happens rather than scoring 0.
+    """
+    return f"{source}:{path_key}#{_heading_slug(heading)}:{ordinal}"
+
+
 # --------------------------------------------------------------------------------------
 # Public: page record -> chunk records
 # --------------------------------------------------------------------------------------
@@ -386,6 +444,7 @@ def page_record_to_chunks(record: dict) -> list[dict]:
     }
 
     chunks: list[dict] = []
+    ordinals: dict[str, int] = {}  # per-heading counter, so split sections stay distinguishable
     for section in split_sections(flow_elements(content_root)):
         body = render_section(section)
         if not body.strip():
@@ -394,16 +453,28 @@ def page_record_to_chunks(record: dict) -> list[dict]:
             rec = dict(base)
             rec["heading"] = section["heading"]
             rec["text"] = compose_text(title, section_label, section["heading"], piece)
+            slug = _heading_slug(section["heading"])
+            ordinals[slug] = ordinals.get(slug, 0) + 1
+            rec["chunk_key"] = compose_chunk_key(
+                record["source"], record["path_key"], section["heading"], ordinals[slug]
+            )
             chunks.append(rec)
     return chunks
 
 
 def iter_page_records():
-    """Yield the current page record for each url in the manifest (skips stale snapshots)."""
+    """Yield the current page record for each url in the manifest (skips stale snapshots).
+
+    Also skips pages whose path is excluded by config.EXCLUDE_PATH_SEGMENTS, so narrowing the
+    scope takes effect on the next ingest without having to re-crawl or prune data/pages/.
+    """
     if not config.MANIFEST_PATH.exists():
         return
     manifest = json.loads(config.MANIFEST_PATH.read_text(encoding="utf-8"))
     for meta in manifest.values():
+        segments = meta["path_key"].split("/")
+        if any(seg in segments for seg in config.EXCLUDE_PATH_SEGMENTS):
+            continue
         jp = config.PROJECT_ROOT / meta["json_path"]
         if jp.exists():
             yield json.loads(jp.read_text(encoding="utf-8"))

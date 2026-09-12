@@ -10,7 +10,7 @@ Concurrency is deliberately capped at one run at a time. Two independent reasons
   * Cohere trial keys allow 10 rerank calls/minute and a single complex-route run makes up
     to 3. Serialising keeps a burst of visitors from tripping the provider's limit — which
     would show up as a 90 s stall, not a clean error.
-  * The free HF Spaces CPU is 2 vCPU. The 3770x1536 dense matmul plus BM25 scoring is
+  * The free HF Spaces CPU is 2 vCPU. The 16576x1536 dense matmul plus BM25 scoring is
     comfortable serially and thrashes in parallel.
 """
 
@@ -125,7 +125,7 @@ async def _run(question: str, mode: str, route: str) -> AsyncIterator[str]:
     try:
         while not (task.done() and queue.empty()):
             if loop.time() > deadline:
-                yield sse("error", {"message": "The run took too long and was stopped."})
+                yield sse("error", {"message": "That took too long, so it was stopped."})
                 return
             try:
                 event = await asyncio.wait_for(queue.get(), timeout=HEARTBEAT_SECONDS)
@@ -141,8 +141,8 @@ async def _run(question: str, mode: str, route: str) -> AsyncIterator[str]:
         # The detail goes to the server log, not the visitor: provider exceptions can carry
         # request context, and a public demo has no reason to hand that out.
         print(f"[demo] run failed: {type(exc).__name__}: {exc}", file=sys.stderr)
-        yield sse("error", {"message": "Something went wrong running the pipeline. "
-                                       "Please try again, or pick a precomputed example."})
+        yield sse("error", {"message": "That run did not finish. Try again, or pick "
+                                       "one of the saved runs."})
         return
     finally:
         # A worker thread cannot be cancelled — on timeout or client disconnect it keeps

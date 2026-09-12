@@ -63,9 +63,42 @@ def reciprocal_rank(retrieved_ids: list[int], gold_ids: list[int]) -> float:
 # ----------------------------------------------------------------------------------------
 
 
+def resolve_gold_ids(items: list[dict]) -> list[dict]:
+    """Rewrite each item's `gold_ids` from its `gold_keys`, against the index on disk.
+
+    Chunk `id` is positional (src/ingest.py), so re-ingesting a corpus that gained or lost a
+    single page renumbers everything after it. `gold_keys` name the chunks by origin instead
+    (src/chunk.py:compose_chunk_key), and this resolves them to whatever ids the current index
+    uses, so a test set outlives the index it was written against.
+
+    An unresolvable key raises. That is the point: scoring a stale gold id as a miss is
+    indistinguishable from a real retrieval regression, which is the failure this replaces.
+    """
+    with open(config.METADATA_PATH, "r", encoding="utf-8") as f:
+        metadata = json.load(f)
+    id_by_key = {r["chunk_key"]: r["id"] for r in metadata}
+
+    for item in items:
+        keys = item.get("gold_keys")
+        if not keys:
+            raise SystemExit(
+                f"Test item {item['id']} has no gold_keys. Positional gold_ids alone are not "
+                f"valid across a re-ingest. Add gold_keys (see src/chunk.py:compose_chunk_key)."
+            )
+        missing = [k for k in keys if k not in id_by_key]
+        if missing:
+            raise SystemExit(
+                f"Test item {item['id']}: gold_keys not in the current index: {missing}\n"
+                f"The page was restructured or dropped from the crawl scope. Re-author this "
+                f"item against the new index rather than letting it score 0."
+            )
+        item["gold_ids"] = [id_by_key[k] for k in keys]
+    return items
+
+
 def load_testset(path=config.TESTSET_PATH) -> list[dict]:
     with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)["items"]
+        return resolve_gold_ids(json.load(f)["items"])
 
 
 def evaluate_retrieval(testset: list[dict], k: int) -> dict:

@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="UBC Calendar RAG — live demo",
+    title="Ask the UBC Academic Calendar",
     lifespan=lifespan,
     # No interactive API docs in production: the demo's only intended client is its own page.
     docs_url="/docs" if IS_DEV else None,
@@ -125,9 +125,9 @@ async def ask_stream(request: Request, q: str = "", mode: str = "hybrid_rerank",
         return JSONResponse({"error": error}, status_code=400)
 
     if mode not in runner.VALID_MODES:
-        return JSONResponse({"error": "Unknown retrieval mode."}, status_code=400)
+        return JSONResponse({"error": "That is not a search mode I know."}, status_code=400)
     if route not in runner.VALID_ROUTES:
-        return JSONResponse({"error": "Unknown route."}, status_code=400)
+        return JSONResponse({"error": "That is not a route I know."}, status_code=400)
 
     ip_hash = limits.hash_ip(limits.client_ip(request))
     decision = limits.check(ip_hash)
@@ -144,7 +144,7 @@ async def ask_stream(request: Request, q: str = "", mode: str = "hybrid_rerank",
 
     if not runner.try_admit():
         return JSONResponse(
-            {"error": "The demo is busy running another question. Try again in a moment."},
+            {"error": "Busy with another question right now. Try again in a moment."},
             status_code=503,
         )
 

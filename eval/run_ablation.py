@@ -35,6 +35,7 @@ from statistics import mean
 
 from src import config, generate, retrieve
 from eval import judge
+from eval import retrieval_metrics as rm
 
 
 def _load_items(path, kind: str) -> list[dict]:
@@ -42,7 +43,7 @@ def _load_items(path, kind: str) -> list[dict]:
     if not path.exists():
         return []
     data = json.loads(path.read_text(encoding="utf-8"))
-    items = data["items"]
+    items = rm.resolve_gold_ids(data["items"])
     for it in items:
         it["type"] = kind
     return items

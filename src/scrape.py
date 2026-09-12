@@ -72,14 +72,22 @@ def _disallowed(path: str) -> bool:
     return any(path == d.rstrip("/") or path.startswith(d) for d in config.ROBOTS_DISALLOW_PREFIXES)
 
 
+def excluded(path: str) -> bool:
+    """True for in-scope-by-prefix paths we still don't want (see EXCLUDE_PATH_SEGMENTS)."""
+    segments = path.split("/")
+    return any(seg in segments for seg in config.EXCLUDE_PATH_SEGMENTS)
+
+
 def in_scope_live(path: str) -> bool:
-    if _disallowed(path):
+    if _disallowed(path) or excluded(path):
         return False
     return _prefix_match(path, config.LIVE_SCOPE_PREFIXES) or path in config.COURSE_SUBJECT_PATHS
 
 
 def in_scope_archive(path: str) -> bool:
-    return _prefix_match(path, config.ARCHIVE_SCOPE_PREFIXES) or path in config.COURSE_SUBJECT_PATHS
+    # ARCHIVE_SUBJECT_PATHS, not the (now dynamically discovered) COURSE_SUBJECT_PATHS: the
+    # archive slice stays deliberately narrow. See the note in config.py.
+    return _prefix_match(path, config.ARCHIVE_SCOPE_PREFIXES) or path in config.ARCHIVE_SUBJECT_PATHS
 
 
 def archive_url_for(path_key: str) -> str:
@@ -153,6 +161,31 @@ def enumerate_live(session: requests.Session, delay: float) -> dict[str, str]:
     return in_scope
 
 
+def enumerate_subjects(session: requests.Session) -> dict[str, str]:
+    """Discover every course-description subject page. Returns {path_key: url}.
+
+    Subject pages are taxonomy-term pages the sitemap does not list, so they have to come from
+    the course-descriptions index instead. Falls back to config.COURSE_SUBJECT_PATHS if that
+    page can't be read, so a crawl still runs (with reduced scope) rather than dying here.
+    """
+    index_url = config.CALENDAR_BASE_URL + "/" + config.COURSE_SUBJECT_INDEX_PATH
+    r = fetch(session, index_url)
+    if r is None or r.status_code != 200:
+        print(f"  ! could not read {index_url} (HTTP {getattr(r, 'status_code', '??')}); "
+              f"falling back to the {len(config.COURSE_SUBJECT_PATHS)} configured subjects.")
+        return {pk: config.CALENDAR_BASE_URL + "/" + pk for pk in config.COURSE_SUBJECT_PATHS}
+
+    found = set(re.findall(r"/course-descriptions/subject/([a-z0-9_-]+)", r.text, re.I))
+    paths = sorted(f"course-descriptions/subject/{code.lower()}" for code in found)
+    paths = [p for p in paths if not _disallowed(p)]
+    if not paths:
+        print(f"  ! no subject links found at {index_url}; falling back to configured subjects.")
+        return {pk: config.CALENDAR_BASE_URL + "/" + pk for pk in config.COURSE_SUBJECT_PATHS}
+
+    print(f"Course-descriptions index lists {len(paths)} subjects.")
+    return {pk: config.CALENDAR_BASE_URL + "/" + pk for pk in paths}
+
+
 def archive_targets(live_path_keys: list[str]) -> dict[str, str]:
     """Derive in-scope archive URLs from the live path_keys (the archive has no sitemap)."""
     return {pk: archive_url_for(pk) for pk in live_path_keys if in_scope_archive(pk)}
@@ -166,9 +199,11 @@ def build_worklist(session, editions: list[str], sample: bool, delay: float) -> 
         live_pks = {pk: config.CALENDAR_BASE_URL + "/" + pk for pk in config.SAMPLE_PATHS}
     elif "live" in editions:
         live_pks = enumerate_live(session, delay)
-        # Course-subject pages are taxonomy-term pages the sitemap omits — add them explicitly.
-        for pk in config.COURSE_SUBJECT_PATHS:
-            live_pks.setdefault(pk, config.CALENDAR_BASE_URL + "/" + pk)
+        # Course-subject pages are taxonomy-term pages the sitemap omits, so they come from the
+        # course-descriptions index instead.
+        time.sleep(delay)
+        for pk, url in enumerate_subjects(session).items():
+            live_pks.setdefault(pk, url)
     else:
         live_pks = {}
 

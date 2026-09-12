@@ -36,14 +36,14 @@ HERE = Path(__file__).resolve().parent
 CSS = (HERE / "web" / "static" / "panels.css").read_text(encoding="utf-8")
 
 MODES = {
-    "hybrid + rerank (default)": "hybrid_rerank",
-    "hybrid (dense + BM25)": "hybrid",
-    "dense only": "dense",
+    "Hybrid + rerank (default)": "hybrid_rerank",
+    "Hybrid: vector + keyword": "hybrid",
+    "Vector search only": "dense",
 }
 ROUTES = {
-    "auto (let the router decide)": "auto",
-    "force simple": "simple",
-    "force agentic": "complex",
+    "Auto: let the router pick": "auto",
+    "Always single-shot": "simple",
+    "Always multi-step": "complex",
 }
 
 EXAMPLES = [
@@ -167,8 +167,8 @@ def answer(question: str, mode_label: str, route_label: str, request: gr.Request
 
     if "error" in box:
         print(f"[demo] run failed: {type(box['error']).__name__}: {box['error']}", flush=True)
-        renderer.error = ("Something went wrong running the pipeline. Please try again, or "
-                          "pick one of the examples.")
+        renderer.error = ("That run did not finish. Try again, or pick one of the examples "
+                          "below.")
     else:
         result = box["result"]
         renderer.answer_text = result["answer"]
@@ -183,19 +183,19 @@ def _usage_line() -> str:
     if usage["budget_exhausted"]:
         # No "see the recorded runs instead" here: web/replay.py and web/cache/ belong to
         # the FastAPI and static builds, and neither ships with this Space.
-        return "**Daily API budget reached.** The live pipeline resets at 00:00 UTC."
+        return "**Out of model calls for today.** The limit resets at 00:00 UTC."
     return (f"{usage['llm_calls_remaining']}/{usage['llm_calls_limit']} model calls left today "
             f"· {usage['per_ip_hour']}/hour per visitor · {CHUNKS:,} chunks indexed "
             f"· {config.RETRIEVAL_MODE} · {config.ANTHROPIC_MODEL}")
 
 
-with gr.Blocks(title="UBC Calendar RAG") as demo:
+with gr.Blocks(title="Ask the UBC Academic Calendar") as demo:
     gr.Markdown(
-        "# UBC Academic Calendar — Adaptive RAG\n"
-        "A from-scratch RAG pipeline with its internals on display: adaptive routing, "
-        "agentic query decomposition, hybrid dense + BM25 retrieval with reciprocal-rank "
-        "fusion, and cross-encoder reranking. Ask a question and watch each stage run — "
-        "including the exact prompt sent to the model at every step."
+        "# Ask the UBC Academic Calendar\n"
+        "Ask about a course, a program, or a policy and you get an answer that links back "
+        "to the official calendar page. The panels below show the work behind it: how the "
+        "question got routed, what each of the two search methods turned up, which excerpts "
+        "made the final cut, and the exact prompt the model saw."
     )
 
     with gr.Row():
@@ -205,10 +205,10 @@ with gr.Blocks(title="UBC Calendar RAG") as demo:
             label="", placeholder="Ask about UBC courses, programs, or policies…",
             scale=5, container=False,
         )
-        submit = gr.Button("Run pipeline", variant="primary", scale=1)
+        submit = gr.Button("Ask", variant="primary", scale=1)
 
     with gr.Row():
-        mode = gr.Dropdown(list(MODES), value=list(MODES)[0], label="Retrieval", scale=1)
+        mode = gr.Dropdown(list(MODES), value=list(MODES)[0], label="Search", scale=1)
         route = gr.Dropdown(list(ROUTES), value=list(ROUTES)[0], label="Route", scale=1)
 
     usage = gr.Markdown(_usage_line())
@@ -216,22 +216,23 @@ with gr.Blocks(title="UBC Calendar RAG") as demo:
 
     with gr.Row():
         with gr.Column():
-            gr.Markdown("### Pipeline")
+            gr.Markdown("### Steps")
             trace_out = gr.HTML(
-                '<div class="empty">Ask a question to watch the pipeline execute.</div>')
+                '<div class="empty">Ask a question and the steps will show up here.</div>')
         with gr.Column():
-            gr.Markdown("### Retrieval")
+            gr.Markdown("### Search results")
             retrieval_out = gr.HTML(
-                '<div class="empty">Candidate documents will appear here.</div>')
+                '<div class="empty">The excerpts each search finds will show up here.</div>')
 
     # gr.Markdown, not gr.HTML: the model answers in Markdown and Gradio renders it.
     answer_out = gr.Markdown()
 
     gr.Markdown(
         "Excerpts are quoted from the [UBC Vancouver Academic Calendar]"
-        "(https://vancouver.calendar.ubc.ca) and every result links back to its official "
-        "page, which is always authoritative. Unofficial educational demo — not academic "
-        "advice. [Source](https://github.com/DevSchretl/UBCHelper)."
+        "(https://vancouver.calendar.ubc.ca), and every result links to the page it came "
+        "from. The calendar is the official word, so check it there before you act on "
+        "anything you read here. This is a student project, not academic advising. "
+        "[Source](https://github.com/DevSchretl/UBCHelper)."
     )
 
     # One registration for both triggers (gr.on), rather than binding twice — two bindings

@@ -20,9 +20,9 @@ from . import generate, trace
 CLASSIFY_SYSTEM = (
     "You are a query router for a UBC academic-calendar Q&A system. Classify the user's "
     "question as either 'simple' or 'complex'.\n"
-    "  simple  — answerable from one calendar page (a single course's prerequisites or "
+    "  simple: answerable from one calendar page (a single course's prerequisites or "
     "description, one program's requirements, one policy or date).\n"
-    "  complex — needs multiple courses or programs, a comparison (between programs, "
+    "  complex: needs multiple courses or programs, a comparison (between programs, "
     "student cohorts, or calendar editions), or a prerequisite/requirement chain "
     "(e.g. 'compare X and Y', or 'what do I need to take before Z').\n"
     "Reply with exactly one word: simple or complex."

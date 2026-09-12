@@ -91,6 +91,7 @@ def generate(num: int, seed: int) -> list[dict]:
                 "question": question,
                 "reference_answer": reference_answer,
                 "gold_ids": [chunk["id"]],
+                "gold_keys": [chunk["chunk_key"]],
                 "source_chunk_id": chunk["id"],
             }
         )
@@ -111,10 +112,11 @@ def main() -> None:
 
     payload = {
         "description": (
-            "Auto-generated, corpus-grounded test set (eval/make_testset.py). Each gold id "
+            "Auto-generated, corpus-grounded test set (eval/make_testset.py). Each gold key "
             "points at an indexed calendar chunk. REVIEW AND CURATE before trusting the "
-            "numbers: delete vague/wrong items, fix wording, add sibling ids to gold_ids "
-            "for near-duplicate chunks (edition/cohort twins)."
+            "numbers: delete vague/wrong items, fix wording, add sibling keys to gold_keys "
+            "for near-duplicate chunks (edition/cohort twins). gold_keys are what the eval "
+            "resolves against the index; gold_ids are a positional cache it overwrites."
         ),
         "items": items,
     }

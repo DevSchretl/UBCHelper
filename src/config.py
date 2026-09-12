@@ -56,20 +56,17 @@ ARCHIVE_EDITION_DIR = "vancouver/2526"          # archive.calendar.ubc.ca/vancou
 # Which editions to crawl (comma-separated): "live", "archive", or both.
 EDITIONS = os.getenv("UBCAL_EDITIONS", "live,archive").split(",")
 
-# --- Scope: LIVE 2026/27 = entire Faculty of Science + campus-wide policies + all cohort-split
-# programs (+ the course subjects below). A live URL is in scope if its path starts with one of
-# these prefixes (or exactly matches a course-subject path).
+# --- Scope: LIVE 2026/27 = every faculty/college/school + campus-wide policies (+ the course
+# subjects below). A live URL is in scope if its path starts with one of these prefixes (or
+# exactly matches a course-subject path).
+#
+# This used to name the Faculty of Science subtree plus the five cohort-split programs
+# individually. Widening to the whole chapter picks up the remaining faculties (Applied Science,
+# Medicine, Education, Land & Food Systems, and the rest) without having to enumerate them, and
+# the cohort-split programs it used to list are all children of it anyway.
 LIVE_SCOPE_PREFIXES = [
-    "faculties-colleges-and-schools/faculty-science",
-    "faculties-colleges-and-schools/courses-study-and-degrees/science",
+    "faculties-colleges-and-schools",
     "campus-wide-policies-and-regulations",
-    # Cohort-split programs (all found): B.A., Media Studies, Commerce, VSE, Forestry.
-    "faculties-colleges-and-schools/faculty-arts/bachelor-arts",
-    "faculties-colleges-and-schools/faculty-arts/bachelor-media-studies",
-    "faculties-colleges-and-schools/faculty-commerce-and-business-administration/bachelor-commerce",
-    "faculties-colleges-and-schools/vancouver-school-economics/bachelor-international-economics",
-    "faculties-colleges-and-schools/faculty-forestry-and-environmental-stewardship/bsc-natural-resources-students-starting-september-2024",
-    "faculties-colleges-and-schools/faculty-forestry-and-environmental-stewardship/bsc-degrees-students-who-started-prior-september-2024",
 ]
 
 # --- Scope: ARCHIVE 2025/26 = NARROW collision slice. Only the requirement-bearing subtrees
@@ -86,8 +83,25 @@ ARCHIVE_SCOPE_PREFIXES = [
     "faculties-colleges-and-schools/faculty-forestry-and-environmental-stewardship/bsc-degrees-students-who-started-prior-september-2024",
 ]
 
-# Course descriptions: one page per subject, included in both editions (exact-path match).
+# The index page that lists every subject, which enumerate_subjects() reads. Note this is the
+# "Courses by Subject" sub-page, not the /course-descriptions chapter landing page, which links
+# only to its own table of contents.
+COURSE_SUBJECT_INDEX_PATH = "course-descriptions/courses-subject"
+
+# Course descriptions: one page per subject (exact-path match). These are taxonomy-term pages
+# the sitemap omits, so scrape.enumerate_subjects() discovers the full live set from the
+# course-descriptions index at crawl time; this list is the fallback if that fetch fails.
 COURSE_SUBJECT_PATHS = [
+    "course-descriptions/subject/cpscv",
+    "course-descriptions/subject/mathv",
+    "course-descriptions/subject/statv",
+]
+
+# The ARCHIVE edition deliberately mirrors only these three subjects, not every subject the live
+# crawl finds. The archive exists to create edition collisions on requirement-bearing pages (see
+# ARCHIVE_SCOPE_PREFIXES below); mirroring ~200 more subject pages would double the crawl and
+# blunt that trap into general near-duplicate noise without testing anything new.
+ARCHIVE_SUBJECT_PATHS = [
     "course-descriptions/subject/cpscv",
     "course-descriptions/subject/mathv",
     "course-descriptions/subject/statv",
@@ -97,6 +111,15 @@ COURSE_SUBJECT_PATHS = [
 # list these anyway).
 ROBOTS_DISALLOW_PREFIXES = [
     "admin/", "search", "user/", "node/add", "comment/reply", "filter/tips", "media/oembed",
+]
+
+# Path segments excluded from the live crawl even though they sit inside a scope prefix.
+# `academic-staff` is a per-faculty roster of people (114 pages; one of them is a single
+# 159,000-character list of names). Nothing a student asks about courses, programs or policies
+# is answered by a staff directory, so these pages would only add retrieval distractors, and
+# the largest of them are individually too big for the embedding model to accept.
+EXCLUDE_PATH_SEGMENTS = [
+    s for s in os.getenv("UBCAL_EXCLUDE_PATH_SEGMENTS", "academic-staff").split(",") if s
 ]
 
 # A handful of structurally different pages for the extraction smoke test (`scrape --sample`):
@@ -124,16 +147,28 @@ CHUNK_MAX_CHARS = int(os.getenv("UBCAL_CHUNK_MAX_CHARS", "1800"))
 CHUNK_OVERLAP = int(os.getenv("UBCAL_CHUNK_OVERLAP", "150"))
 CHUNK_MIN_CHARS = int(os.getenv("UBCAL_CHUNK_MIN_CHARS", "120"))  # merge tiny trailing chunks
 
+# Hard ceiling, enforced even on blocks that are otherwise kept whole (requirement tables).
+# text-embedding-3-small rejects any input over 8192 tokens, and a single oversized chunk kills
+# the whole ingest mid-batch with nothing saved. Calendar text tokenizes densely (tables, codes,
+# names), so this is set well under 8192 * 4 chars to stay safe on the worst-tokenizing pages.
+CHUNK_HARD_MAX_CHARS = int(os.getenv("UBCAL_CHUNK_HARD_MAX_CHARS", "16000"))
+
 # ======================================================================================
 # Retrieval / generation / eval knobs (domain-agnostic; used once the engine is copied in)
 # ======================================================================================
 TOP_K = int(os.getenv("UBCAL_TOP_K", "4"))
 
 RETRIEVAL_MODE = os.getenv("UBCAL_RETRIEVAL_MODE", "hybrid_rerank")  # dense | hybrid | hybrid_rerank
-DENSE_K = int(os.getenv("UBCAL_DENSE_K", "20"))
-SPARSE_K = int(os.getenv("UBCAL_SPARSE_K", "20"))
+
+# Stage-1 recall width. These were 20/20/20; measured at 50 on the 12-question test set,
+# hit@4 went 0.667 -> 0.833 and MRR 0.542 -> 0.667, at both the 3,770- and 16,576-chunk corpus
+# sizes. The win is the reranker getting a deeper shortlist to work with: the golds it was
+# missing sat at stage-1 ranks 20-50, where it never saw them. Cost is unchanged in API calls
+# (rerank takes the shortlist in one request), only the documents per request go up.
+DENSE_K = int(os.getenv("UBCAL_DENSE_K", "50"))
+SPARSE_K = int(os.getenv("UBCAL_SPARSE_K", "50"))
 RRF_K = int(os.getenv("UBCAL_RRF_K", "60"))
-RERANK_CANDIDATES = int(os.getenv("UBCAL_RERANK_CANDIDATES", "20"))
+RERANK_CANDIDATES = int(os.getenv("UBCAL_RERANK_CANDIDATES", "50"))
 RERANKER_MODEL = os.getenv("UBCAL_RERANKER_MODEL", "rerank-v3.5")
 COHERE_API_KEY = os.getenv("COHERE_API_KEY", "")
 

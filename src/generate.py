@@ -41,7 +41,7 @@ SYSTEM_PROMPT = (
     'see them, so phrases like "Excerpt 3" are meaningless to them. You SHOULD, however, '
     "point the user to the official calendar page URL(s) shown with the excerpts for the "
     "authoritative and most current wording. Excerpts may come from different calendar "
-    "editions (e.g. 2026/27 vs 2025/26) or different student cohorts — answer for the "
+    "editions (e.g. 2026/27 vs 2025/26) or different student cohorts, so answer for the "
     "edition and cohort the question asks about, defaulting to the current 2026/27 "
     "calendar, and note when requirements differ between them. Keep the answer concise "
     "and focused directly on what was asked. If the excerpts do not contain enough "

@@ -48,22 +48,36 @@ pinned: false
 license: mit
 ---
 
-# UBC Academic Calendar — Adaptive RAG
+# Ask the UBC Academic Calendar
 
-An interactive walkthrough of a from-scratch retrieval-augmented generation pipeline over the
-UBC Vancouver Academic Calendar: adaptive routing, agentic query decomposition, hybrid
-dense + BM25 retrieval with reciprocal-rank fusion, and cross-encoder reranking.
+A walkthrough of a retrieval-augmented question answering pipeline over the UBC Vancouver
+Academic Calendar. It routes each question, breaks the hard ones into sub-questions, searches
+with both vectors and keywords, fuses the two rankings, and reranks the shortlist.
 
-Every run on this page was produced by the real pipeline and captured frame by frame, so the
-routing decisions, sub-questions, candidate rankings and prompts shown are exactly what the
-engine did. The page itself is static — it holds no API keys and calls no service — so it can
-only replay the {n} recorded questions. Source and instructions for running it live:
+Every run on this page was recorded from the real pipeline, step by step, so the routing
+decisions, sub-questions, candidate rankings and prompts are what actually happened. The page
+itself is static. It holds no API keys and calls no service, so it can only replay the {n}
+questions that were recorded. Source and instructions for running it live:
 <https://github.com/DevSchretl/UBCHelper>
 
 Calendar excerpts are quoted with attribution and every result links to its official page at
-<https://vancouver.calendar.ubc.ca>, which is always authoritative. Unofficial educational
-demo; not academic advice.
+<https://vancouver.calendar.ubc.ca>, which is always the official word. This is a student
+project, not academic advising.
 """
+
+
+def _chunk_count() -> int:
+    """The indexed chunk count, read from the index rather than hardcoded.
+
+    It is only shown in the page's status line, so a missing index degrades to 0 rather than
+    failing the build. Reading it here keeps the published number from silently going stale
+    every time the corpus is re-ingested.
+    """
+    if not config.METADATA_PATH.exists():
+        print("  ! no index found; publishing chunk count as 0")
+        return 0
+    with open(config.METADATA_PATH, "r", encoding="utf-8") as f:
+        return len(json.load(f))
 
 
 def main() -> None:
@@ -122,7 +136,7 @@ def main() -> None:
 
     payload = {
         "built_at": cache.get("built_at", ""),
-        "chunks": 3770,
+        "chunks": _chunk_count(),
         "retrieval_mode": config.RETRIEVAL_MODE,
         "model": config.ANTHROPIC_MODEL,
         "runs": runs,
