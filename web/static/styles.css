@@ -1,9 +1,9 @@
 /* Page chrome for the standalone builds (FastAPI server + static Space): masthead, ask bar,
-   example chips, pane frames, footer. Load AFTER panels.css, which owns the design tokens
-   and everything inside the panels.
+   example chips, the frame around the stages, footer. Load AFTER panels.css, which owns the
+   design tokens and everything inside the stage cards and panels.
 
-   The Gradio Space loads panels.css ONLY — Gradio draws its own page, and the element
-   selectors below (button, select, body) would restyle its widgets. */
+   The Gradio Space never loads this file: it takes panels.css plus gradio.css, because Gradio
+   draws its own page and the element selectors below (body, select) would restyle its widgets. */
 
 * { box-sizing: border-box; }
 
@@ -56,39 +56,67 @@ main { max-width: 1360px; margin: 0 auto; padding: 20px 24px 48px; }
   background: var(--bg); color: var(--ink);
 }
 #question:focus { outline: 2px solid var(--blue); outline-offset: -1px; }
-button {
-  padding: 11px 20px; font-size: 14px; font-weight: 600;
-  background: var(--blue); color: #fff; border: 0; border-radius: 8px; cursor: pointer;
+#submit-btn {
+  padding: 11px 20px; font: inherit; font-size: 14px; font-weight: 600;
+  background: var(--blue); color: var(--on-blue); border: 0; border-radius: 8px; cursor: pointer;
   white-space: nowrap;
 }
-button:hover:not(:disabled) { filter: brightness(1.1); }
-button:disabled { opacity: 0.55; cursor: not-allowed; }
+#submit-btn:hover:not(:disabled) { filter: brightness(1.1); }
+#submit-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
-.ask-controls {
-  display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
-  margin-top: 11px; font-size: 12.5px; color: var(--ink-soft);
+/* The examples: one row that scrolls sideways. stages.js adds arrow buttons on a laptop. */
+.examples-wrap { margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--border); }
+#examples { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; column-gap: 6px; }
+#examples > .label { grid-column: 1 / -1; display: block; margin-bottom: 8px; font-size: 12.5px; color: var(--ink-soft); }
+#examples > .gallery {
+  --fade-left: 0px; --fade-right: 0px;
+  display: flex; grid-row: 2; grid-column: 2; flex-wrap: nowrap; gap: 7px; padding: 2px 0;
+  overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; overscroll-behavior-x: contain;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--fade-left), #000 calc(100% - var(--fade-right)), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 var(--fade-left), #000 calc(100% - var(--fade-right)), transparent 100%);
 }
-.ask-controls label { display: flex; align-items: center; gap: 6px; }
-select {
-  font: inherit; padding: 4px 7px; border-radius: 6px;
-  border: 1px solid var(--border); background: var(--bg); color: var(--ink);
+#examples > .gallery::-webkit-scrollbar { display: none; }
+#examples.fade-left > .gallery { --fade-left: 32px; }
+#examples.fade-right > .gallery { --fade-right: 32px; }
+#examples > .ex-arrow {
+  display: grid; grid-row: 2; place-items: center; width: 34px; height: 34px; padding: 0;
+  border: 1px solid var(--border-strong); border-radius: 50%; background: var(--surface); color: var(--ink); cursor: pointer;
 }
-.budget { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--ink-faint); }
-
-.examples { margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--border); }
-.examples-label { font-size: 12.5px; color: var(--ink-soft); display: block; margin-bottom: 8px; }
-.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+#examples > .ex-prev { grid-column: 1; }
+#examples > .ex-next { grid-column: 3; }
+#examples > .ex-arrow:disabled { opacity: 0.35; cursor: default; }
+@media (max-width: 759px), (hover: none) {
+  #examples > .ex-arrow { display: none; }
+  #examples > .gallery { grid-column: 1 / -1; }
+}
 .chip {
-  font: inherit; font-size: 12.5px; font-weight: 500;
+  display: inline-flex; flex: none; align-items: baseline; gap: 6px; max-width: 26em;
+  font: inherit; font-size: 12.5px; font-weight: 500; scroll-snap-align: start;
   padding: 6px 11px; border-radius: 999px; cursor: pointer;
   background: var(--blue-soft); color: var(--blue);
-  border: 1px solid transparent; text-align: left;
+  border: 1px solid transparent; text-align: left; white-space: nowrap;
 }
-.chip:hover { border-color: var(--blue); filter: none; }
+.chip:hover { border-color: var(--blue); }
 .chip .chip-cat {
-  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em;
-  opacity: 0.7; margin-left: 6px;
+  flex: none; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.75;
 }
+.chip .chip-q { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+/* Search settings: one line until opened. */
+.settings { margin-top: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+.settings > summary {
+  padding: 9px 12px; font-size: 13px; font-weight: 600; color: var(--ink-soft); cursor: pointer;
+}
+.settings-body {
+  display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+  padding: 2px 12px 12px; font-size: 12.5px; color: var(--ink-soft);
+}
+.settings-body label { display: flex; align-items: center; gap: 6px; }
+.settings select {
+  font: inherit; padding: 4px 7px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--ink);
+}
+.budget { margin: 10px 0 0; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--ink-faint); }
 
 /* Mode switching: the same markup serves the FastAPI build and the static Space, so each
    mode hides the controls the other one owns. `static-mode` is set by app.js at startup. */
@@ -107,16 +135,25 @@ body.static-mode .server-only { display: none; }
 }
 body.static-mode .chip[hidden] { display: none; }
 
-/* ---- panes ---- */
-.panes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
-@media (max-width: 1080px) { .panes { grid-template-columns: minmax(0, 1fr); } }
-
-.pane {
+/* ---- the stages: one card around the stage cards and the open panel ---- */
+.pipe {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 16px; min-width: 0;
+  border-radius: var(--radius); padding: 18px 20px 20px; min-width: 0; box-shadow: var(--shadow);
 }
-.pane h2 { margin: 0 0 3px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); }
-.pane-hint { margin: 0 0 14px; font-size: 12.5px; color: var(--ink-faint); }
+#panel-answer { display: grid; gap: 14px; }
+/* The answer itself, beside its sources on a wide screen. Plain text: this build does not
+   render Markdown yet. */
+.answer-row { display: grid; grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr); gap: 14px; align-items: start; }
+.answer-row:not(:has(.sp-answer-side)) { display: none; }
+.answer-text {
+  min-width: 0; padding: 16px 18px; border: 1px solid var(--border); border-radius: 12px;
+  background: var(--surface); font-size: 15px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+@media (max-width: 759px) {
+  main { padding: 14px 14px 40px; }
+  .pipe { padding: 14px 12px 16px; }
+  .answer-row { grid-template-columns: minmax(0, 1fr); }
+}
 
 footer {
   margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--border);

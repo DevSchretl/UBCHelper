@@ -131,7 +131,9 @@ https://vancouver.calendar.ubc.ca/course-descriptions/subject/cpscv
 
 A web UI that shows the work behind each answer: which route the router chose, how a complex
 question got broken up, what dense and BM25 each put forward, which candidates survived RRF
-fusion and reranking, and the exact prompt sent to the model at every step.
+fusion and reranking, and the exact prompt sent to the model at every step. A run is drawn as
+four connected stages, Plan, Search, Rank and Answer, whose cards fill in live as the pipeline
+moves. The Answer panel stays open during a run, and clicking a card opens that stage.
 
 It ships in three forms from one codebase, because Hugging Face charges for Spaces that run
 compute.
@@ -154,21 +156,22 @@ python -m http.server -d site 8080         # preview it exactly as HF serves it
 ```
 
 The three share everything that matters. `src/` is untouched by any of them, the panel styling
-in [web/static/panels.css](web/static/panels.css) is common, and the only difference is how
-trace events reach a screen: [web/render.py](web/render.py) builds the HTML server-side for
-Gradio, while [web/static/app.js](web/static/app.js) builds the same markup client-side from an
-SSE stream or from an embedded recording.
+in [web/static/panels.css](web/static/panels.css) is common,
+[web/static/stages.js](web/static/stages.js) handles moving between stages in all of them, and
+the only difference is how trace events reach a screen: [web/render.py](web/render.py) builds
+the HTML server-side for Gradio, while [web/static/app.js](web/static/app.js) builds the same
+markup client-side from an SSE stream or from an embedded recording.
 
 | File | Role |
 |------|------|
 | [app.py](app.py)                     | Gradio entry point, which is what the Hugging Face Space runs. |
-| [web/render.py](web/render.py)       | Trace events → HTML, server-side, for the Gradio build. |
+| [web/render.py](web/render.py)       | Trace events → the stage cards and panels, server-side, for the Gradio build. |
 | [web/app.py](web/app.py)             | FastAPI app: the page, the SSE endpoints, security headers. |
 | [web/runner.py](web/runner.py)       | Runs the pipeline in a worker thread, streams its trace events as SSE. |
 | [web/limits.py](web/limits.py)       | Per-IP rate limits + the global daily API budget (SQLite). |
 | [web/replay.py](web/replay.py)       | Streams saved runs: same frames, zero cost. |
 | [web/bootstrap.py](web/bootstrap.py) | Pulls the prebuilt index from a private dataset repo at startup. |
-| [web/static/](web/static/)           | The single page: no framework, no build step. Branches on `window.DEMO_RUNS` to run with or without a backend. |
+| [web/static/](web/static/)           | The single page: no framework, no build step. Branches on `window.DEMO_RUNS` to run with or without a backend. `stages.js` (which stage is open) is shared with the Space, and `gradio.css` holds the Space's own layout. |
 | [scripts/build_demo_cache.py](scripts/build_demo_cache.py) | Records real pipeline runs as trace-event streams. |
 | [scripts/build_static_site.py](scripts/build_static_site.py) | Bundles those runs + the page into `site/` for the static Space. |
 

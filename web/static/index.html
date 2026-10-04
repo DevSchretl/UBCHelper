@@ -31,30 +31,36 @@
                aria-label="Your question">
         <button type="submit" id="submit-btn">Ask</button>
       </div>
-      <div class="ask-controls">
-        <label class="server-only">Search
+    </form>
+
+    <div class="examples-wrap">
+      <div id="examples">
+        <span class="label">Saved runs. Click one to watch it play back:</span>
+        <div id="example-chips" class="gallery"></div>
+      </div>
+      <div id="no-match" class="empty" hidden>No saved run matches that.</div>
+    </div>
+
+    <details class="settings server-only">
+      <summary>Search settings</summary>
+      <div class="settings-body">
+        <label>Search
           <select id="mode" aria-label="Search mode">
             <option value="hybrid_rerank">Hybrid + rerank</option>
             <option value="hybrid">Hybrid: vector + keyword</option>
             <option value="dense">Vector search only</option>
           </select>
         </label>
-        <label class="server-only">Route
+        <label>Route
           <select id="route" aria-label="Route override">
             <option value="auto">Auto: let the router pick</option>
             <option value="simple">Always single-shot</option>
             <option value="complex">Always multi-step</option>
           </select>
         </label>
-        <span class="budget" id="budget"></span>
       </div>
-    </form>
-
-    <div class="examples">
-      <span class="examples-label">Saved runs. Click one to watch it play back:</span>
-      <div id="examples" class="chips"></div>
-      <div id="no-match" class="empty" hidden>No saved run matches that.</div>
-    </div>
+    </details>
+    <p class="budget" id="budget"></p>
 
     <p class="static-only static-note">
       This page plays back <strong>saved runs</strong>. Each one was recorded from the real
@@ -67,31 +73,21 @@
     <div id="notice" class="notice" hidden></div>
   </section>
 
-  <section class="panes">
-    <div class="pane">
-      <h2>Steps</h2>
-      <p class="pane-hint">Open any step to see the prompt that went to the model and the
-        reply that came back.</p>
-      <ol id="trace" class="trace"></ol>
-      <div id="trace-empty" class="empty">Ask a question, or pick a saved run, and the steps
-        will show up here.</div>
+  <!-- The run, as four stages: app.js draws the cards and the panels, stages.js shows the
+       panel for the card that is selected. -->
+  <section id="pipe" class="pipe" aria-label="How the answer was found">
+    <div id="stage-bar"></div>
+    <div id="panel-plan"></div>
+    <div id="panel-search"></div>
+    <div id="panel-rank"></div>
+    <div id="panel-answer">
+      <div id="answer-head"></div>
+      <div id="answer-row" class="answer-row">
+        <div id="answer-md" class="answer-text"></div>
+        <div id="answer-side"></div>
+      </div>
+      <div id="answer-nav"></div>
     </div>
-
-    <div class="pane">
-      <h2>Search results</h2>
-      <p class="pane-hint">Vector search and keyword search each put forward candidates, the
-        two rankings get fused, then the reranker rescores the shortlist. Ids that turn up in
-        both searches are highlighted.</p>
-      <div id="retrieval"></div>
-      <div id="retrieval-empty" class="empty">The excerpts each search finds will show up
-        here.</div>
-    </div>
-  </section>
-
-  <section class="answer-section" id="answer-section" hidden>
-    <h2>Answer <span class="route-badge" id="answer-route"></span></h2>
-    <div id="answer" class="answer"></div>
-    <div id="sources" class="sources"></div>
   </section>
 
   <footer>
@@ -104,5 +100,6 @@
 </main>
 
 <script src="/static/app.js"></script>
+<script src="/static/stages.js"></script>
 </body>
 </html>

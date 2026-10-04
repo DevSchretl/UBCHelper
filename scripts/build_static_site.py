@@ -120,7 +120,7 @@ def main() -> None:
             shutil.rmtree(item) if item.is_dir() else item.unlink()
     out.mkdir(parents=True, exist_ok=True)
 
-    for name in ("index.html", "panels.css", "styles.css", "app.js"):
+    for name in ("index.html", "panels.css", "styles.css", "app.js", "stages.js"):
         shutil.copy2(STATIC_SRC / name, out / name)
 
     # The page loads assets from /static/* when FastAPI serves it; flatten those for a static
@@ -129,6 +129,7 @@ def main() -> None:
     html = html.replace('href="/static/panels.css"', 'href="panels.css"')
     html = html.replace('href="/static/styles.css"', 'href="styles.css"')
     html = html.replace('src="/static/app.js"', 'src="app.js"')
+    html = html.replace('src="/static/stages.js"', 'src="stages.js"')
     # runs.js must be evaluated before app.js, which branches on window.DEMO_RUNS at load.
     html = html.replace('<script src="app.js"></script>',
                         '<script src="runs.js"></script>\n<script src="app.js"></script>')

@@ -29,3 +29,5 @@ site/
 # Python noise
 __pycache__/
 *.pyc
+
+DEPLOY.md
