@@ -10,8 +10,10 @@ A plain Python loop, no LangChain/LangGraph, so the whole thing stays readable:
 
 The merge is what earns the complex path its keep: a single retrieval tends to satisfy one
 part of a multi-hop question and starve the other, whereas retrieving each sub-question
-separately and interleaving the rankings surfaces an excerpt for *every* hop. (The eval
-harness scores single-shot retrieve() only, so this recall win is not yet measured there.)
+separately and interleaving the rankings surfaces an excerpt for *every* hop. Whether that
+actually pays is measured by eval/run_agent_eval.py, which runs this path and the
+single-shot one over the same questions at the same depth — read it there rather than
+trusting this paragraph.
 
 Synthesis deliberately reuses `generate.generate_answer`: the grounded SYSTEM_PROMPT and
 `format_context` already turn a list of excerpts + the original question into one clean

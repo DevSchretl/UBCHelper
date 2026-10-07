@@ -1,8 +1,9 @@
 {
-  "description": "Broad questions a closed-book model can reasonably attempt, each still bound to a gold calendar chunk. Used by eval/run_ablation.py as the 'general' arm. gold_keys are the durable gold reference and survive a re-ingest; gold_ids are a positional cache that eval/retrieval_metrics.py:resolve_gold_ids overwrites at load time.",
+  "description": "Broad questions a closed-book model can reasonably attempt, each still bound to a gold calendar chunk. Used by eval/run_ablation.py as the 'general' arm. gold_keys are the durable gold reference and survive a re-ingest; gold_ids are a positional cache that eval/retrieval_metrics.py:resolve_gold_ids overwrites at load time. expected_route is the gold label for the Phase-4 router (eval/run_agent_eval.py): 'complex' iff a complete answer needs two or more DISTINCT pages, where two editions of the same page count as one.",
   "items": [
     {
       "id": "g001",
+      "expected_route": "simple",
       "question": "What happens to a UBC student's academic standing, and what standings exist?",
       "reference_answer": "There are three levels of academic standing: In Good Standing, On Academic Probation, and Failed, Required to Withdraw. Students enter the University In Good Standing.",
       "gold_ids": [
@@ -15,6 +16,7 @@
     },
     {
       "id": "g002",
+      "expected_route": "simple",
       "question": "Roughly how many credits does a UBC B.Sc. degree require?",
       "reference_answer": "A minimum of 120 credits; some options require more.",
       "gold_ids": [
@@ -27,6 +29,7 @@
     },
     {
       "id": "g003",
+      "expected_route": "simple",
       "question": "What is CPSC 110 at UBC about?",
       "reference_answer": "CPSC 110, Computation, Programs, and Programming (4 credits), covers fundamental program and computation structures.",
       "gold_ids": [
@@ -39,6 +42,7 @@
     },
     {
       "id": "g004",
+      "expected_route": "complex",
       "question": "What kinds of requirements does a UBC Bachelor of Arts student have to complete?",
       "reference_answer": "B.A. students complete a set of faculty-wide degree requirements — for current entrants (2024/25 or later): Writing and Research, Ways of Knowing Breadth, Outside, Upper-level, and Arts Credit Minimum; earlier cohorts also had separate Language, Science, and Literature requirements.",
       "gold_ids": [

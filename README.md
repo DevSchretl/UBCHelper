@@ -25,7 +25,8 @@ Embeddings run on the **OpenAI API**, reranking on the **Cohere API**, and gener
 Built on the same engine as [RAGChef](../RAGChef), pointed at a scraped calendar corpus
 instead of a recipe CSV. No LangChain or LlamaIndex: hybrid dense + BM25 retrieval, RRF
 fusion, hosted rerank, an adaptive router with a decompose→multi-hop→synthesize agent, and a
-two-tier eval harness, all written out directly.
+two-tier eval harness that also scores the router and the agent against the single-shot
+baseline, all written out directly.
 
 ```
               ┌────────────────────────── run once ──────────────────────────────┐
@@ -46,7 +47,10 @@ two-tier eval harness, all written out directly.
 
 Complex questions can take the adaptive path instead (`ask.py --adaptive`): a router
 classifies the question, and **complex** ones go through the agent: decompose into
-sub-questions → retrieve each → merge → synthesize one answer.
+sub-questions → retrieve each → merge → synthesize one answer. The agent measurably beats
+single-shot retrieval on multi-hop questions and measurably *loses* on edition collisions;
+the router, as tuned, does not pay for itself. Numbers and the argument are under
+[Evaluation](#evaluation).
 
 ---
 
@@ -236,6 +240,9 @@ and checks that the read token can actually see the private index before anythin
 | [src/agent.py](src/agent.py)       | Complex path: decompose → multi-hop retrieve → merge → synthesize. |
 | [src/pipeline.py](src/pipeline.py) | The one adaptive entry point (`answer()`). |
 | [ask.py](ask.py)                   | The CLI that wires it all together. |
+| [eval/run_eval.py](eval/run_eval.py) | Tier 1 + Tier 2 over the single-shot path, by category, plus stage-1 shortlist recall. |
+| [eval/run_ablation.py](eval/run_ablation.py) | RAG vs closed-book, both scored against the gold excerpt. |
+| [eval/run_agent_eval.py](eval/run_agent_eval.py) | Router accuracy + agent vs single-shot vs a budget-matched control, through `pipeline.answer()`. |
 
 Design notes carried over from RAGChef: brute-force cosine search on a numpy matrix instead
 of a vector DB (transparent, and instant at this scale); BM25 built in memory from the indexed
@@ -259,7 +266,16 @@ pipeline: **Tier 1** deterministic retrieval metrics (`hit@k`, `recall@k`, `MRR`
 metrics (faithfulness, answer relevancy, context precision/recall:
 [eval/judge.py](eval/judge.py)); the headline number is hallucination rate = 1 − faithfulness.
 [eval/run_ablation.py](eval/run_ablation.py) additionally answers every question closed-book
-to measure what retrieval is actually worth.
+to measure what retrieval is actually worth, over the 12 specific questions plus the four
+broader ones in `eval/testset.general.json`.
+
+Those two runners call `retrieve.retrieve()` directly, so neither touches the Phase-4 router
+or agent. [eval/run_agent_eval.py](eval/run_agent_eval.py) is the one that does: it goes
+through `pipeline.answer()` with the route **forced**, and runs three arms over every
+question — the shipped single-shot path, the agent, and a budget-matched control that
+one-shot-retrieves as deep as the agent's merge. Every comparative metric is scored at the
+same depth `k` on all three, because the agent returns up to 12 excerpts and the simple path
+returns 4; scoring it deeper would be a gift rather than a comparison.
 
 ```powershell
 # Generate candidate questions from the indexed corpus, then CURATE BY HAND:
@@ -273,7 +289,19 @@ $env:UBCAL_RETRIEVAL_MODE="hybrid_rerank"; python -m eval.run_eval --retrieval-o
 # Full judged run + ablation (judge defaults to a local LM Studio model, see UBCAL_JUDGE_MODEL):
 python -m eval.run_eval --name full
 python -m eval.run_ablation --name rag-vs-norag
+
+# Router + agent, three arms through the real pipeline (~18 min, ~$0.28 on a paid key):
+python -m eval.run_agent_eval --selftest                      # pure helpers, no network
+python -m eval.run_agent_eval --limit 3 --mode dense --no-judge   # cheap iteration loop
+python -m eval.run_agent_eval --name agent-v1 --router-votes 3 --pace 10
 ```
+
+Two levers make the agent eval cheap while iterating: `--mode dense` or `--mode hybrid`
+makes **no Cohere calls at all** (the `shortlist` trace event only fires in `hybrid_rerank`),
+and `--no-judge` drops the local judge, which is what actually dominates wall clock. `--pace`
+spaces the questions out — one agent-eval question makes up to five rerank calls and a Cohere
+trial key allows ten a minute, so an unpaced run can walk into
+[src/rerank.py](src/rerank.py)'s 90 s backoff. Never run two evals at once.
 
 The test set targets three deliberately hard categories: **code-lookup** (hinges on a course
 or program code, which is BM25's job), **multi-hop** (prerequisite and requirement chains
@@ -287,19 +315,131 @@ chunks (full ledger in `eval/reports/history.csv`):
 | retrieval | 3,770 chunks | 16,576 chunks |
 |---|---|---|
 | dense only | 0.500 / 0.458 / 0.403 | 0.500 / 0.458 / 0.417 |
-| hybrid, no rerank | 0.667 / 0.625 / 0.542 | 0.667 / 0.583 / 0.444 |
-| hybrid + rerank | 0.667 / 0.625 / 0.542 | 0.667 / 0.625 / 0.542 |
-| hybrid + rerank, 50-wide stage 1 | 0.833 / 0.750 / 0.653 | **0.833 / 0.708 / 0.667** |
+| hybrid, no rerank (20-wide stage 1) | 0.667 / 0.625 / 0.542 | 0.667 / 0.583 / 0.444 |
+| hybrid + rerank (20-wide stage 1) | 0.667 / 0.625 / 0.542 | 0.667 / 0.625 / 0.542 |
+| hybrid, no rerank (50-wide stage 1) | — | 0.667 / 0.583 / 0.472 |
+| hybrid + rerank (50-wide stage 1) | 0.833 / 0.750 / 0.653 | **0.833 / 0.708 / 0.667** |
 
-(hit@4 / recall@4 / MRR. Bottom right is the current default.)
+(hit@4 / recall@4 / MRR. Bottom right is the current default. The 50-wide no-rerank cell is
+the control that isolates the reranker at the shipped configuration; the 3,770-chunk half
+would need an index rebuild to measure and has not been run.)
 
-Two things worth reading off that table. The bigger corpus costs stage-1 ranking real ground
+Three things worth reading off that table. The bigger corpus costs stage-1 ranking real ground
 (hybrid recall 0.625 → 0.583, MRR 0.542 → 0.444) and the reranker absorbs all of it, which is
 the first time reranking has measurably earned its place here: at 3,770 chunks hybrid and
-hybrid + rerank scored identically. And widening stage 1 from 20 to 50 candidates is worth more
-than the corpus change either way, because the golds the reranker kept missing were sitting at
-stage-1 ranks 20-50 where it never saw them. Twelve questions is a small sample, so treat the
-ordering as real and the decimals as noisy.
+hybrid + rerank scored identically.
+
+Second, **widening stage 1 does almost nothing on its own.** Going 20-wide → 50-wide without
+the reranker leaves recall flat (0.583 either way) and moves MRR by 0.028. The same widening
+*with* the reranker is worth 0.625 → 0.708 recall and 0.542 → 0.667 MRR. So the win belongs
+to the pair, not to the wider shortlist — the reranker was starved of candidates, not the
+retriever.
+
+Third, that mechanism is now **measured rather than inferred**. The judged run scores the
+stage-1 shortlist itself before the reranker reorders anything: **recall@20 = 0.750,
+recall@50 = 0.917.** The 0.167 gap is precisely the recall a 20-wide stage 1 never showed the
+reranker. It also exposes the current ceiling — a 0.917 shortlist yields a 0.708 final
+recall@4, so the rerank-and-cut-to-4 step still discards about a fifth of the recall already
+in hand. Twelve questions is a small sample, so treat the ordering as real and the decimals
+as noisy.
+
+Per category, at the current default (`eval/reports/report.md`):
+
+| category | n | hit@4 | recall@4 | MRR |
+|---|---|---|---|---|
+| code-lookup | 5 | 0.800 | 0.700 | 0.800 |
+| collision | 3 | 1.000 | 1.000 | 0.667 |
+| multi-hop | 3 | 0.667 | 0.333 | 0.333 |
+| policy | 1 | 1.000 | 1.000 | 1.000 |
+
+Collisions are solved; multi-hop is where single-shot retrieval falls over, which is what the
+agent is for — see below.
+
+### Tier 2: judged generation, and what retrieval is worth
+
+Judged run over the 12 specific questions at the current corpus and default retrieval
+(`--name full-16576`, judge `google/gemma-4-e4b` via LM Studio, zero parse failures):
+
+| metric | score |
+|---|---|
+| faithfulness | 0.903 |
+| answer relevancy | 0.774 |
+| context precision | 0.859 |
+| context recall | 0.792 |
+| **hallucination rate** (1 − faithfulness) | **0.097** |
+
+The ablation answers all 16 questions a second time closed-book and scores both arms against
+the **gold** excerpt, so the two are directly comparable:
+
+| set | n | RAG groundedness | no-RAG groundedness | RAG halluc. | no-RAG halluc. |
+|---|---|---|---|---|---|
+| overall | 16 | 0.700 | 0.332 | 0.300 | 0.668 |
+| specific | 12 | 0.764 | 0.335 | 0.236 | 0.665 |
+| general | 4 | 0.510 | 0.324 | 0.490 | 0.676 |
+
+Retrieval roughly halves the hallucination rate on specific-source questions (0.665 → 0.236).
+On the four broad questions it helps far less (0.676 → 0.490), which is the expected shape:
+a closed-book model can make a reasonable attempt at "what is academic standing", and the
+groundedness judge marks a plausible-but-different answer unsupported either way.
+
+### Does the router and the agent earn their keep?
+
+Three arms over all 16 questions, every metric at k=4 (`eval/reports/agent.md`):
+
+| arm | hit@4 | recall@4 | MRR | groundedness |
+|---|---|---|---|---|
+| `simple` (shipped single-shot) | 0.750 | 0.656 | 0.552 | 0.602 |
+| `simple_matched` (one-shot, agent's depth) | 0.750 | 0.656 | 0.552 | 0.717 |
+| `agent` (decompose → multi-hop → merge) | **0.875** | **0.781** | **0.615** | **0.879** |
+
+The control matters: `simple_matched` retrieves as deep as the agent's merge (5.19 excerpts on
+average) and its retrieval metrics come out **identical** to the plain simple arm. So the
+agent's +0.125 recall is not "it got more excerpts" — it is *which* excerpts it got.
+
+But the attribution in [src/agent.py](src/agent.py) is only half right. `decompose` returned a
+**single** sub-question on 11 of 16 items (mean 1.38), and it does not restate the question
+verbatim — it rewrites it. On two of the three items where the agent found golds the simple
+arm missed, that one-hop rewrite is the entire mechanism: "How many credits is CPSC 110 worth
+and what does it cover?" became "CPSC 110 credit value and course description/content
+coverage", which retrieved both golds where the original retrieved none. Only `q006` won
+through the documented round-robin merge — two cohort sub-questions, one gold from each hop,
+interleaved into the top 4. Across the set, hops 2 and 3 first surfaced 4 golds. **A good part
+of the "agent win" is query rewriting, not multi-hop retrieval.**
+
+The agent also has a real failure mode: on **collision** questions it *loses* 0.333 recall and
+0.389 MRR, because rewriting drops the disambiguating edition or cohort phrase. `q011` lost a
+gold the simple arm had.
+
+| bucket | n | Δ recall@4 | Δ MRR | Δ groundedness |
+|---|---|---|---|---|
+| overall | 16 | +0.125 | +0.062 | +0.277 |
+| multi-hop | 3 | +0.333 | +0.278 | +0.305 |
+| code-lookup | 5 | +0.200 | +0.067 | +0.233 |
+| collision | 3 | **−0.333** | **−0.389** | +0.250 |
+
+The router classifies with accuracy **0.875** and stability 0.938 over three votes. It catches
+every genuinely complex question (recall 1.000 on the `complex` class) but over-calls two
+simple ones, so precision is 0.667. Accuracy flatters it: only 4 of 16 questions are complex,
+so "always simple" scores 0.750.
+
+What that routing is actually worth, scored from the arms above:
+
+| policy | recall@4 | groundedness | LLM calls/q | est. cost |
+|---|---|---|---|---|
+| `always_simple` | 0.656 | 0.602 | 1.00 | $0.056 |
+| `always_complex` | **0.781** | **0.879** | 2.00 | $0.092 |
+| `router` (as shipped) | 0.656 | 0.743 | 1.38 | $0.077 |
+| `oracle` (perfect routing) | 0.719 | 0.709 | 1.25 | $0.072 |
+
+**The adaptive router does not currently pay for itself.** It lands on exactly
+`always_simple`'s recall while spending 38% more LLM calls, because its two false-`complex`
+calls give back what its correct ones gain. And `always_complex` beats even perfect routing,
+since the agent also helps on questions a human would label simple. On this evidence the
+cheapest real improvement is to drop the router and always take the complex path — or better,
+to split `decompose`'s query rewriting from its multi-hop expansion and apply the rewriting
+everywhere except collisions. Sixteen questions is a small sample and `decompose` is
+nondeterministic (no temperature is sent to Anthropic), so a delta under 1/16 = 0.063 is not a
+result; `eval/reports/agent.md` records every sub-question verbatim so two runs can be diffed.
 
 Each test item carries `gold_keys`, not just positional `gold_ids`. A chunk's `id` is its
 position in the index, so adding or dropping a single page renumbers everything after it;

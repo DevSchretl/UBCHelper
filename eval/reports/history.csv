@@ -13,3 +13,5 @@ timestamp,name,k,num_questions,judged,retrieval_mode,corpus_size,chat_model,judg
 2026-09-12T13:47:55,post-exp-k50,4,12,False,hybrid_rerank,16576,claude-haiku-4-5,google/gemma-4-e4b,0.8333,0.7083,0.6667,,,,,
 2026-09-12T13:48:27,old-corpus-k50,4,12,False,hybrid_rerank,3770,claude-haiku-4-5,google/gemma-4-e4b,0.8333,0.75,0.6528,,,,,
 2026-09-12T13:53:16,expanded-defaults,4,12,False,hybrid_rerank,16576,claude-haiku-4-5,google/gemma-4-e4b,0.8333,0.7083,0.6667,,,,,
+2026-10-06T22:14:18,hybrid-k50,4,12,False,hybrid,16576,claude-haiku-4-5,google/gemma-4-e4b,0.6667,0.5833,0.4722,,,,,
+2026-10-06T22:22:47,full-16576,4,12,True,hybrid_rerank,16576,claude-haiku-4-5,google/gemma-4-e4b,0.8333,0.7083,0.6667,0.9028,0.7743,0.8588,0.7917,0.0972

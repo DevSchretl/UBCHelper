@@ -28,7 +28,7 @@ import csv
 from datetime import datetime
 from statistics import mean
 
-from src import config, generate, retrieve
+from src import config, generate, retrieve, trace
 from eval import judge
 from eval import retrieval_metrics as rm
 
@@ -45,11 +45,19 @@ def run(testset: list[dict], k: int, do_judge: bool) -> dict:
     per_item = []
     for n, item in enumerate(testset, start=1):
         # --- Tier 1: retrieve once, score deterministically -----------------------------
-        results = retrieve.retrieve(item["question"], top_k=k)
+        # The trace sink is only here to catch the `shortlist` event, which carries the
+        # stage-1 candidate ids handed to the reranker (hybrid_rerank only). Scoring those
+        # measures the claim in src/config.py:163-167 -- that the golds the reranker kept
+        # missing were sitting at stage-1 ranks 20-50 -- instead of inferring it.
+        events: list[dict] = []
+        with trace.collect(events.append):
+            results = retrieve.retrieve(item["question"], top_k=k)
+        shortlist = next((e["ids"] for e in events if e.get("kind") == "shortlist"), None)
         retrieved_ids = [r.id for r in results]
         gold_ids = item["gold_ids"]
         record = {
             "id": item["id"],
+            "category": item.get("category") or "general",
             "question": item["question"],
             "reference_answer": item.get("reference_answer", ""),
             "gold_ids": gold_ids,
@@ -59,6 +67,11 @@ def run(testset: list[dict], k: int, do_judge: bool) -> dict:
                 "hit": rm.hit_at_k(retrieved_ids, gold_ids, k),
                 "recall": rm.recall_at_k(retrieved_ids, gold_ids, k),
                 "rr": rm.reciprocal_rank(retrieved_ids, gold_ids),
+            },
+            "stage1": None if not shortlist else {
+                "n": len(shortlist),
+                "recall@20": rm.recall_at_k(shortlist, gold_ids, 20),
+                "recall@n": rm.recall_at_k(shortlist, gold_ids, len(shortlist)),
             },
         }
 
@@ -116,9 +129,40 @@ def _aggregate(per_item: list[dict], k: int, do_judge: bool) -> dict:
             "retrieval": retrieval,
             "generation": generation,
             "hallucination_rate": hallucination_rate,
+            "stage1": _stage1_summary(per_item),
+            "by_category": _by_category(per_item),
         },
         "per_item": per_item,
     }
+
+
+def _stage1_summary(per_item: list[dict]) -> dict | None:
+    """Mean stage-1 recall at 20 vs the full shortlist. None outside hybrid_rerank."""
+    rows = [x["stage1"] for x in per_item if x.get("stage1")]
+    if not rows:
+        return None
+    return {
+        "n": len(rows),
+        "shortlist_size": round(mean(r["n"] for r in rows), 1),
+        "recall@20": round(mean(r["recall@20"] for r in rows), 4),
+        "recall@n": round(mean(r["recall@n"] for r in rows), 4),
+    }
+
+
+def _by_category(per_item: list[dict]) -> dict:
+    """Per-category retrieval metrics. The test set is BUILT around these categories
+    (see the README's "three deliberately hard categories"), so the aggregate alone hides
+    whether BM25 is earning its keep on code-lookup or the reranker on multi-hop."""
+    out = {}
+    for cat in sorted({x.get("category") or "general" for x in per_item}):
+        rows = [x for x in per_item if (x.get("category") or "general") == cat]
+        out[cat] = {
+            "n": len(rows),
+            "hit@k": round(mean(x["retrieval"]["hit"] for x in rows), 4),
+            "recall@k": round(mean(x["retrieval"]["recall"] for x in rows), 4),
+            "mrr": round(mean(x["retrieval"]["rr"] for x in rows), 4),
+        }
+    return out
 
 
 # ----------------------------------------------------------------------------------------
@@ -185,6 +229,32 @@ def _render_markdown(report: dict, name: str) -> str:
             f"| **hallucination_rate** | **{_fmt(agg['hallucination_rate'])}** |",
         ]
 
+    # --- by category: the test set is built around these, so score them separately ---
+    cats = agg.get("by_category") or {}
+    if cats:
+        lines += ["", "## By category", "",
+                  f"| category | n | hit@{k} | recall@{k} | MRR |",
+                  "|---|---|---|---|---|"]
+        for cat, row in cats.items():
+            lines.append(f"| {cat} | {row['n']} | {_fmt(row['hit@k'])} | "
+                         f"{_fmt(row['recall@k'])} | {_fmt(row['mrr'])} |")
+        lines += ["", "Small buckets: one item flipping moves an n=3 category by 0.33. "
+                      "Treat the ordering as real and the decimals as noisy."]
+
+    # --- stage-1 shortlist recall: measures the ranks-20-50 claim directly ---
+    s1 = agg.get("stage1")
+    if s1:
+        lines += ["", "## Stage-1 shortlist recall", "",
+                  f"Recall over the {s1['shortlist_size']:.0f}-candidate shortlist handed "
+                  f"to the reranker, before it reorders anything. The gap between @20 and "
+                  f"@{s1['shortlist_size']:.0f} is the recall that a 20-wide stage 1 would "
+                  f"never have shown the reranker at all.",
+                  "",
+                  "| depth | recall |", "|---|---|",
+                  f"| stage-1 recall@20 | {_fmt(s1['recall@20'])} |",
+                  f"| stage-1 recall@{s1['shortlist_size']:.0f} | {_fmt(s1['recall@n'])} |",
+                  f"| final recall@{k} (after rerank) | {_fmt(ret['recall@k'])} |"]
+
     # --- per-question detail: all test data, one block each ---
     lines += ["", "## Questions", ""]
     for x in report["per_item"]:
@@ -244,20 +314,30 @@ def _append_history(report: dict, name: str) -> None:
         "context_recall": gen.get("context_recall"),
         "hallucination_rate": report["aggregate"]["hallucination_rate"],
     }
-    is_new = not config.HISTORY_PATH.exists()
+    append_history_row(config.HISTORY_PATH, HISTORY_COLUMNS, row)
+
+
+def append_history_row(path, columns: list[str], row: dict) -> None:
+    """Append one row to a history ledger, refusing if the file's header has drifted.
+
+    Shared with eval/run_agent_eval.py, which keeps its own ledger with its own columns:
+    one implementation of the guard means the two cannot disagree about what counts as a
+    corrupt ledger.
+    """
+    is_new = not path.exists()
     if not is_new:
         # Appending a row in a new column order under an old header silently shifts every
         # value into the wrong column, so refuse rather than corrupt the ledger.
-        with open(config.HISTORY_PATH, "r", encoding="utf-8", newline="") as f:
+        with open(path, "r", encoding="utf-8", newline="") as f:
             header = next(csv.reader(f), [])
-        if header != HISTORY_COLUMNS:
+        if header != columns:
             raise SystemExit(
-                f"{config.HISTORY_PATH} header does not match HISTORY_COLUMNS.\n"
-                f"  file: {header}\n  code: {HISTORY_COLUMNS}\n"
+                f"{path} header does not match the expected columns.\n"
+                f"  file: {header}\n  code: {columns}\n"
                 f"Migrate the existing rows to the new columns before appending."
             )
-    with open(config.HISTORY_PATH, "a", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=HISTORY_COLUMNS)
+    with open(path, "a", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=columns)
         if is_new:
             writer.writeheader()
         writer.writerow(row)

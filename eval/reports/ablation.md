@@ -1,8 +1,8 @@
-# UBCHelper ablation — rag-vs-norag
+# UBCHelper ablation — rag-vs-norag-16576
 
-2026-09-07T23:53:49 · 16 questions (12 specific + 4 general) · k=4
+2026-10-06T22:32:31 · 16 questions (12 specific + 4 general) · k=4
 
-Models: chat=`claude-haiku-4-5`, judge=`google/gemma-4-e4b`, embed=`text-embedding-3-small` · corpus=3770
+Models: chat=`claude-haiku-4-5`, judge=`google/gemma-4-e4b`, embed=`text-embedding-3-small` · corpus=16576
 
 Groundedness = fraction of the answer's claims supported by the gold excerpt (higher is better). Hallucination = 1 - groundedness. Both arms are judged against the same gold excerpt, so a closed-book answer that gives plausible but *different* requirements still counts as unsupported — which is why general questions are listed separately.
 
@@ -10,9 +10,9 @@ Groundedness = fraction of the answer's claims supported by the gold excerpt (hi
 
 | set | n | RAG groundedness | no-RAG groundedness | RAG halluc. | no-RAG halluc. | halluc. delta (RAG-noRAG) |
 |-----|---|------------------|---------------------|-------------|----------------|---------------------------|
-| overall | 16 | 0.724 | 0.333 | 0.276 | 0.667 | -0.391 |
-| specific | 12 | 0.715 | 0.352 | 0.285 | 0.648 | -0.363 |
-| general | 4 | 0.750 | 0.276 | 0.250 | 0.724 | -0.474 |
+| overall | 16 | 0.700 | 0.332 | 0.300 | 0.668 | -0.368 |
+| specific | 12 | 0.764 | 0.335 | 0.236 | 0.665 | -0.429 |
+| general | 4 | 0.510 | 0.324 | 0.490 | 0.676 | -0.186 |
 
 ## Questions
 
@@ -22,27 +22,23 @@ Groundedness = fraction of the answer's claims supported by the gold excerpt (hi
 
 **Reference:** One of CPSC 210 or CPEN 221, and either one of CPSC 121, MATH 220 (or MATH_O 220), or a score of 68% or higher in MATH 226.
 
-**RAG answer** — groundedness 0.500 (1/2 claims):
+**RAG answer** — groundedness 1.00 (3/3) claims:
 
-For the 2026/27 calendar, the prerequisites for CPSC_V 221 are:
+For CPSC 221 in the 2026/27 calendar, the prerequisites are:
 
-- One of CPSC_V 210 or CPEN_V 221, **and**
-- Either (a) one of CPSC_V 121, MATH_V 220, or MATH_O 220, **or** (b) a score of 68% or higher in MATH_V 226
+- One of CPSC_V 210 or CPEN_V 221, **AND**
+- Either (a) one of CPSC_V 121, MATH_V 220, or MATH_O 220, **OR** (b) a score of 68% or higher in MATH_V 226
 
-For the most current and authoritative wording, see: https://vancouver.calendar.ubc.ca/course-descriptions/subject/cpscv
+For the authoritative and most current wording, see: https://vancouver.calendar.ubc.ca/course-descriptions/subject/cpscv
 
-**No-RAG answer** — groundedness 0.333 (1/3 claims):
+**No-RAG answer** — groundedness 0.67 (2/3) claims:
 
-# CPSC 221 Prerequisites
-
-**CPSC 221 (Basic Algorithms and Data Structures)** requires:
+CPSC 221 (Basic Algorithms and Data Structures) has the following prerequisites:
 
 - **CPSC 210** (Software Construction)
+- **One of**: MATH 200, MATH 217, MATH 226, or MATH 253 (a second-year discrete math or linear algebra course)
 
-**Corequisite:**
-- **MATH 200** (Calculus III) or equivalent
-
-Some students may also need foundational discrete math knowledge, though MATH 200 or concurrent enrollment typically satisfies this requirement.
+Some students may have these requirements waived based on equivalent coursework, but these are the standard prerequisites listed in the calendar.
 
 ### q002 — specific — gold [24, 197] Computer Science, Faculty of Science [2026/27] (+1 more)
 
@@ -50,24 +46,26 @@ Some students may also need foundational discrete math knowledge, though MATH 20
 
 **Reference:** CPSC 221 (or DSCI 221) plus at least 3 credits of MATH or STAT at the 200 level or above (the 2025/26 edition also accepted COMM 291 or BIOL 300 for the second part).
 
-**RAG answer** — groundedness 0.000 (0/3 claims):
+**RAG answer** — groundedness 0.75 (3/4) claims:
 
-Based on the course descriptions provided, I don't have the explicit prerequisites for CPSC 320 listed in these excerpts. The excerpts mention CPSC 320 as a required course in the Cognitive Systems major program and reference a note about grade requirements in a statistics course before admission to CPSC 320, but they don't spell out the full prerequisite course list.
+According to the 2025/26 calendar, the prerequisites for CPSC 320 are:
 
-For the authoritative and complete prerequisite information for CPSC 320, I'd recommend checking the course description directly on the UBC Vancouver Academic Calendar at:
+- All of the following:
+  - CPSC 221 or DSCI 221
+  - At least 3 credits from: COMM 291, BIOL 300, or MATH or STAT at 200 level or above
 
-https://vancouver.calendar.ubc.ca/course-descriptions/subject/cpscv
+For the authoritative and most current wording, see: https://archive.calendar.ubc.ca/vancouver/2526/course-descriptions/subject/cpscv/index.html
 
-**No-RAG answer** — groundedness 0.667 (2/3 claims):
+**No-RAG answer** — groundedness 0.40 (2/5) claims:
 
 # CPSC 320 Prerequisites
 
 **CPSC 320** (Intermediate Algorithm Design and Analysis) requires:
 
 - **CPSC 221** (Basic Algorithms and Data Structures)
-- **MATH 200** (Calculus III) or **MATH 217** (Multivariable Calculus for Engineers)
+- **One of:** MATH 200, MATH 217, MATH 226, or MATH 253 (proof-based mathematics)
 
-You must have completed these prerequisites before enrolling in CPSC 320.
+Some sections may have additional corequisite requirements for linear algebra, so check your specific course section. CPSC 320 is a core course for computer science majors and assumes solid understanding of data structures and discrete mathematics.
 
 ### q003 — specific — gold [20, 193] Computer Science, Faculty of Science [2026/27] (+1 more)
 
@@ -75,34 +73,32 @@ You must have completed these prerequisites before enrolling in CPSC 320.
 
 **Reference:** CPSC 213, and either CPSC 221 or DSCI 221.
 
-**RAG answer** — groundedness 1.000 (2/2 claims):
+**RAG answer** — groundedness 0.67 (2/3) claims:
 
-The prerequisites for CPSC 313 (Computer Hardware and Operating Systems) are:
+For CPSC 313 (Computer Hardware and Operating Systems), the prerequisites are:
 
 - CPSC 213, **and**
 - Either CPSC 221 or DSCI 221
 
-For the current 2026/27 calendar, you can find this information at: https://vancouver.calendar.ubc.ca/course-descriptions/subject/cpscv
+You can find the authoritative course description at https://vancouver.calendar.ubc.ca/course-descriptions/subject/cpscv
 
-**No-RAG answer** — groundedness 1.000 (2/2 claims):
+**No-RAG answer** — groundedness 0.25 (1/4) claims:
 
-# CPSC 313 Prerequisites
-
-CPSC 313 (Computer Hardware and Operating Systems) requires:
+CPSC 313 (Computer Hardware and Operating Systems) has the following prerequisites:
 
 - **CPSC 213** (Introduction to Computer Systems)
 
-This is the primary prerequisite. Students must complete CPSC 213 before enrolling in CPSC 313.
+This is the main prerequisite. Some sections may also require or recommend concurrent enrollment in a math course, but CPSC 213 is the essential requirement.
 
-### q004 — specific — gold [580, 2319] Mathematics, Faculty of Science [2026/27] (+1 more)
+### q004 — specific — gold [580, 2196] Mathematics, Faculty of Science [2026/27] (+1 more)
 
 **Q:** Which courses satisfy the prerequisite for MATH 200, Calculus III?
 
 **Reference:** One of MATH 101, MATH 103, MATH 105, MATH 121, SCIE 001, MATH_O 101, or MATH_O 103.
 
-**RAG answer** — groundedness 1.000 (8/8 claims):
+**RAG answer** — groundedness 0.88 (7/8) claims:
 
-For MATH_V 200 (Calculus III) in 2026/27, the prerequisite is one of the following courses:
+For MATH_V 200 (Calculus III) in the 2026/27 calendar, the prerequisite is one of the following courses:
 
 - MATH_V 101
 - MATH_V 103
@@ -112,21 +108,19 @@ For MATH_V 200 (Calculus III) in 2026/27, the prerequisite is one of the followi
 - MATH_O 101
 - MATH_O 103
 
-You need to complete just one of these courses to satisfy the prerequisite.
+You need to complete just one of these courses to meet the prerequisite for MATH_V 200.
 
-For the authoritative and most current wording, please see the course description at https://vancouver.calendar.ubc.ca/course-descriptions/subject/mathv.
+For the authoritative and most current wording, please consult: https://vancouver.calendar.ubc.ca/course-descriptions/subject/mathv
 
-**No-RAG answer** — groundedness 0.000 (0/4 claims):
+**No-RAG answer** — groundedness 0.75 (3/4) claims:
 
 # MATH 200 Prerequisites
 
 The prerequisite for MATH 200 (Calculus III) is:
 
-**MATH 101 or MATH 103** (or equivalent)
+**MATH 101 or MATH 103 or MATH 105 or a score of 64% or higher in MATH 110**
 
-These are the second-year calculus courses covering integration and applications of derivatives. You must complete one of these before enrolling in MATH 200.
-
-Alternatively, a **sufficient score on the AP Calculus exam** or transfer credit from another institution may also satisfy this requirement.
+These courses cover the differential calculus content needed for MATH 200, which focuses on multivariable calculus and applications.
 
 ### q005 — specific — gold [5, 177] Computer Science, Faculty of Science [2026/27] (+1 more)
 
@@ -134,25 +128,26 @@ Alternatively, a **sufficient score on the AP Calculus exam** or transfer credit
 
 **Reference:** CPSC 110 (Computation, Programs, and Programming) is worth 4 credits and covers fundamental program and computation structures.
 
-**RAG answer** — groundedness 1.000 (1/1 claims):
+**RAG answer** — groundedness 1.00 (1/1) claims:
 
-Based on the calendars provided, **CPSC 110 is worth 4 credits**.
+CPSC 110 is worth **4 credits**.
 
-However, the excerpts don't contain information about what the course covers—they only specify the credit value and that it's a required course in the first year of Computer Science programs. For details about the course content, you would need to check the course description in the UBC Vancouver Academic Calendar or the Department of Computer Science course listings.
+However, the excerpts provided don't contain information about what CPSC 110 covers—they only list it as a required course. For details about the course content and topics, you would need to check the course description in the UBC Course Calendar or the Computer Science department's course listings.
 
-**No-RAG answer** — groundedness 0.200 (2/10 claims):
+For the most current program requirements, see the official calendar at: https://vancouver.calendar.ubc.ca/faculties-colleges-and-schools/faculty-science/bachelor-science/computer-science
 
-**CPSC 110 is worth 3 credits.**
+**No-RAG answer** — groundedness 0.22 (2/9) claims:
 
-This is UBC's introductory computer science course that covers **fundamentals of programming and computational thinking**. The course typically includes:
+CPSC 110 is worth **3 credits**.
 
-- Basic programming concepts (variables, control flow, functions)
-- Problem-solving and algorithm design
-- Data structures (lists, arrays)
+It covers the fundamentals of computer programming, including:
+- Basic programming concepts (variables, data types, control flow)
+- Functions and procedures
 - Introduction to object-oriented programming
-- Testing and debugging
+- Problem-solving and algorithm design
+- Programming in Java
 
-The course uses a student-friendly language (often Python or a similar language) and requires no prior programming experience. It's a foundational course for most Computer Science and related programs at UBC.
+The course emphasizes practical programming skills and is typically the first computer science course for students new to programming. It's a foundational course required for most CS majors and serves as a prerequisite for many upper-level CS courses.
 
 ### q006 — specific — gold [114, 128] Bachelor of Arts — Degree Requirements for students who enter the program in 2023/24 or earlier [2026/27] (+1 more)
 
@@ -160,94 +155,96 @@ The course uses a student-friendly language (often Python or a similar language)
 
 **Reference:** Students entering 2023/24 or earlier must complete seven requirements: Writing and Research, Language, Science, Literature, Outside, Upper-level, and Arts Credit Minimum. Students entering 2024/25 or later complete five: Writing and Research, Ways of Knowing Breadth, Outside, Upper-level, and Arts Credit Minimum — the separate Language, Science, and Literature requirements are folded into the Ways of Knowing Breadth requirement.
 
-**RAG answer** — groundedness 0.600 (3/5 claims):
+**RAG answer** — groundedness 1.00 (2/2) claims:
 
-I don't have enough information in these excerpts to make that comparison. The excerpts reference the different degree requirements for each cohort but don't actually detail what those requirements are.
+I don't have enough information in the provided excerpts to compare the specific degree requirements between these two cohorts. The excerpts reference that there are different "Degree Requirements for students who entered the program in 2023/24 or earlier" versus "Degree Requirements for students who entered the program in 2024/25 or later," but they don't actually detail what those differences are.
 
-To see the specific differences between the B.A. degree requirements for students who entered in 2023/24 versus 2024/25 or later, you'll need to consult the full degree requirements pages in the UBC Calendar:
+To see the specific requirements for each cohort, you would need to consult the full degree requirements pages in the UBC Calendar. For the 2026/27 calendar, you can find this information at:
+- https://vancouver.calendar.ubc.ca/faculties-colleges-and-schools/faculty-arts/bachelor-arts
 
-- For 2026/27: https://vancouver.calendar.ubc.ca/faculties-colleges-and-schools/faculty-arts/bachelor-arts
-- For 2025/26: https://archive.calendar.ubc.ca/vancouver/2526/faculties-colleges-and-schools/faculty-arts/bachelor-arts/
+I'd recommend visiting that page and looking for the separate requirement sections for each cohort to compare them directly.
 
-These pages should have separate sections outlining the requirements for each cohort.
-
-**No-RAG answer** — groundedness 0.100 (1/10 claims):
+**No-RAG answer** — groundedness 0.08 (1/12) claims:
 
 # B.A. Degree Requirements: 2023/24 vs. 2024/25+
 
-## Key Differences
+## Core Structure (Largely Unchanged)
 
-**2023/24 Cohort:**
-- 120 total credits required
-- 36 credits in upper-level courses (300-level and above)
-- No specified minimum for lower-level breadth
-- Writing requirement embedded in discipline courses
+Both cohorts require:
+- **120 total credit hours**
+- **English requirement**: ENGL 112 or equivalent
+- **Science requirement**: One course from approved list
+- **Breadth requirements** across multiple disciplines
 
-**2024/25+ Cohort:**
-- 120 total credits required
-- 36 credits in upper-level courses (300-level and above)
-- Explicit **"Breadth Requirement"**: students must complete courses across multiple disciplinary areas
-- Formalized **Writing Across the Curriculum** approach with designated writing-intensive courses
-- Greater emphasis on ensuring exposure to diverse subject areas
+## Key Difference: Writing Requirement
 
-## Main Change
+**2023/24 students:**
+- Could satisfy writing through various departmental courses or WRDS 150
 
-The primary shift is **structural clarity around breadth**. The 2024/25+ requirements explicitly codify the breadth expectation that was implicit in 2023/24, and formalize writing support across the degree rather than concentrating it in major courses.
+**2024/25+ students:**
+- **WRDS 110** (3 credits) is now the standard requirement
+- More structured, institutionalized approach to writing instruction
 
-Both cohorts maintain the same credit totals and upper-level thresholds, but 2024/25+ students have more defined guidelines about distributing their electives across disciplines.
+## Other Potential Changes
 
-For your specific major, verify the major-specific requirements, as some programs have their own variations on top of the Faculty-wide B.A. framework.
+- **Elective flexibility** may have been adjusted
+- **Upper-level requirements** in major/minor programs may have shifted slightly
+- Some departments updated course offerings and prerequisites
 
-### q007 — specific — gold [1769, 1791] Bachelor of Computer Science [2026/27] (+1 more)
+## Recommendation
+
+For the most precise comparison, I'd recommend checking the specific **Faculty of Arts calendar pages** for each year, as departments often adjust course selections within breadth requirements. The 120-credit framework remains consistent, but the writing requirement shift is the most significant formal change between these cohorts.
+
+Is there a specific requirement area you want me to clarify further?
+
+### q007 — specific — gold [1646, 1668] Bachelor of Computer Science [2026/27] (+1 more)
 
 **Q:** How does admission to the Bachelor of Computer Science program differ from B.Sc. admission from secondary school?
 
 **Reference:** Bachelor of Computer Science admission is a competitive selection process evaluating applicants on academic and other criteria (not every qualified applicant is admitted); B.Sc. admission from secondary school requires starting first year in September of the Winter session of admission (January starts are not permitted).
 
-**RAG answer** — groundedness 0.727 (8/11 claims):
+**RAG answer** — groundedness 0.56 (5/9) claims:
 
-Based on the excerpts provided, here are the key differences:
+Based on the calendar information provided, the Bachelor of Computer Science (B.C.S.) program is fundamentally different from a typical B.Sc. program in that it's specifically designed as a **second bachelor's degree** for students who already hold a recognized bachelor's degree in a non-computer science field.
 
-**Bachelor of Computer Science (B.C.S.):**
-- Designed for students with a **previous bachelor's degree** in a non-overlapping field
-- A **two-year program** leading to a second bachelor's degree
-- Admission is highly selective and based on both academic and non-academic criteria
-- Academic evaluation includes overall record and a minimum B- (68%) average on the most recent 30 credits
-- Non-academic evaluation includes two letters of reference, self-assessment of work history, and a statement of interest
-- Applicants may be interviewed before a decision is made
+Key differences in admission include:
 
-**B.Sc. from Secondary School:**
-- For students entering **directly from high school**
-- Admission is based on performance in specific high school courses, overall academic rigor of the program, and evidence of relevant learning both in and out of school
-- Students are expected to start in September
+**B.C.S. Admission:**
+- Requires completion of a prior bachelor's degree
+- Uses a selective admission process evaluating both academic and non-academic criteria
+- Requires a minimum B- (68%) average in the most recent 30 credits
+- Assesses non-academic qualities through letters of reference, self-assessment, and statement of interest
+- May conduct interviews with selected applicants
+- Is a two-year program
 
-In essence, the B.C.S. is a graduate-entry program for career-changers with an existing degree, while B.Sc. admission is for secondary school students.
+**Secondary School Admission (standard B.Sc.):**
+The excerpts provided focus on B.C.S. requirements and don't contain detailed information about standard secondary school B.Sc. admission, so I cannot make a complete comparison.
 
-For the most current and complete information, refer to the official calendar pages:
-- B.C.S.: https://vancouver.calendar.ubc.ca/faculties-colleges-and-schools/faculty-science/bachelor-computer-science
-- B.Sc.: https://archive.calendar.ubc.ca/vancouver/2526/faculties-colleges-and-schools/faculty-science/bachelor-science/admission-and-transfer/index.html
+Additionally, note that students newly admitted to the B.C.S. cannot pursue another program concurrently at UBC or elsewhere—they must complete all remaining credits through UBC's Vancouver campus.
 
-**No-RAG answer** — groundedness 0.091 (1/11 claims):
+For the most current and complete admission requirements, see https://vancouver.calendar.ubc.ca/faculties-colleges-and-schools/faculty-science/bachelor-computer-science
+
+**No-RAG answer** — groundedness 0.14 (2/14) claims:
 
 # BCS vs B.Sc. Admission
 
-**Bachelor of Computer Science (BCS) admission** is more competitive and specialized:
+**Bachelor of Computer Science (BCS)** has distinct, more competitive admission requirements:
 
-- **Higher entrance requirements**: Typically requires stronger grades in Math and Science than general B.Sc.
-- **Direct entry program**: You're admitted specifically to Computer Science, not a general science program
-- **Restricted seats**: Limited enrollment in the major itself
-- **Math prerequisite emphasis**: Strong performance in Calculus and Physics expected
+- **Admission average**: Typically 85-90%+ (higher than general B.Sc.)
+- **Required courses**: Math 12, Physics 12, English 12 (or equivalents)
+- **Capacity-constrained**: Smaller cohort with selective intake
+- **Direct entry**: Admitted directly into the CS major
 
-**B.Sc. admission** (general Bachelor of Science):
+**B.Sc. (General)** admission is less restrictive:
 
-- **Lower entrance threshold**: Broader acceptance criteria
-- **Open declaration**: You can declare most science majors after first year based on grades in prerequisite courses
-- **More flexibility**: Choose your major after experiencing different subjects
-- **Easier initial entry**: But you must maintain required GPA in CS prerequisites (typically Math 100-level, CPSC 110/210) to actually declare Computer Science as your major
+- **Admission average**: Generally 70-75%+
+- **Math requirement**: Math 12 minimum (Physics recommended but not required)
+- **Higher intake**: Larger program with more spots
+- **Flexible major**: Choose your major after first year, including CS if preferred
 
-**Key difference**: BCS guarantees your spot in the program upon admission; with B.Sc., you need to earn your way into the CS major through strong performance in first-year prerequisites.
+**Key difference**: BCS guarantees your major from day one but requires higher grades and prerequisites. B.Sc. offers flexibility to explore, but competing for CS as a major after first year is more difficult than direct BCS admission.
 
-If you're strong in math/physics and certain about CS, BCS is ideal. If you're exploring options or your grades are borderline, B.Sc. offers a pathway in via first-year performance.
+If you're a strong Math/Physics student aiming for CS, BCS is the direct path. If you want flexibility or have borderline grades, B.Sc. allows entry with potential to pursue CS later (though transfer standards are competitive).
 
 ### q008 — specific — gold [20, 10] Computer Science, Faculty of Science [2026/27] (+1 more)
 
@@ -255,69 +252,70 @@ If you're strong in math/physics and certain about CS, BCS is ideal. If you're e
 
 **Reference:** CPSC 313 requires CPSC 213 and either CPSC 221 or DSCI 221. CPSC 221 in turn requires (beyond CPSC 210) one of CPSC 121, MATH 220, MATH_O 220, or a 68%+ score in MATH 226. So after CPSC 210 you still need CPSC 213 and CPSC 221 (with its discrete-math prerequisite).
 
-**RAG answer** — groundedness 0.000 (0/4 claims):
+**RAG answer** — groundedness 0.67 (2/3) claims:
 
-I don't have enough information in the available excerpts to answer this question. The excerpts show that CPSC_V 313 is a required upper-level course in Computer Science programs, but they don't include the course prerequisites or corequisites for CPSC_V 313.
+Based on the prerequisites for CPSC 313, you need to complete:
 
-To find the specific prerequisites for CPSC_V 313, you should check the course description in the UBC Vancouver Academic Calendar or consult with an academic advisor. You can also contact the Computer Science department directly for the most accurate and current prerequisite information.
+1. **CPSC 213**, and
+2. Either **CPSC 221** or **DSCI 221**
 
-**No-RAG answer** — groundedness 0.667 (4/6 claims):
+Having completed CPSC 210 is good preparation, but it's not a formal prerequisite for CPSC 313.
 
-To take **CPSC 313** (Computer Hardware and Operating Systems), you need:
+For the authoritative and most current wording, see: https://vancouver.calendar.ubc.ca/course-descriptions/subject/cpscv
 
-1. **CPSC 210** ✓ (you've completed this)
-2. **CPSC 221** (Basic Algorithms and Data Structures)
+**No-RAG answer** — groundedness 0.33 (1/3) claims:
 
-CPSC 221 is the key prerequisite you still need to complete. It covers fundamental data structures and algorithmic analysis, which are essential for understanding operating systems and hardware concepts in CPSC 313.
+# Prerequisites for CPSC 313
 
-Make sure you also meet the **math corequisite**: MATH 220 or MATH 226 (Linear Algebra).
+To take CPSC 313 (Computer Hardware and Operating Systems), you need:
 
-### q009 — specific — gold [3508] Bachelor of Science — General Degree Requirements [2025/26]
+- **CPSC 210** ✓ (you've completed this)
+- **CPSC 221** (Basic Algorithms and Data Structures)
+
+So you still need to complete **CPSC 221** before enrolling in CPSC 313.
+
+### q009 — specific — gold [3385] Bachelor of Science — General Degree Requirements [2025/26]
 
 **Q:** In the 2025/26 calendar, what is the minimum number of credits required for a B.Sc. degree?
 
 **Reference:** A minimum of 120 credits (a major, double major, or General Science option requires at least 120 credits but may require more).
 
-**RAG answer** — groundedness 1.000 (2/2 claims):
+**RAG answer** — groundedness 0.80 (4/5) claims:
 
-In the 2025/26 calendar, the minimum number of credits required for a B.Sc. degree depends on which degree option you pursue:
+In the 2025/26 calendar, the minimum number of credits required for a B.Sc. degree depends on your degree option:
 
 - **Major, Combined Major, Double Major, or General Science**: 120 credits minimum
 - **Honours or Combined Honours**: 132 credits minimum
 
-Note that these are minimums—your specific program may require more. For the most current and complete details, see the official calendar page: https://archive.calendar.ubc.ca/vancouver/2526/faculties-colleges-and-schools/faculty-science/bachelor-science/general-degree-requirements/index.html
+Note that these are minimums; your specific specialization may require more credits.
 
-**No-RAG answer** — groundedness 0.500 (3/6 claims):
+For the authoritative and most current wording, see: https://archive.calendar.ubc.ca/vancouver/2526/faculties-colleges-and-schools/faculty-science/bachelor-science/general-degree-requirements/index.html
+
+**No-RAG answer** — groundedness 0.67 (2/3) claims:
 
 The minimum number of credits required for a B.Sc. degree at UBC Vancouver is **120 credits**.
 
-This typically includes:
-- General Education requirements (12 credits)
-- Science requirements (varying by program)
-- Major/specialization requirements
-- Electives to reach the 120-credit minimum
+This includes requirements across science courses, breadth requirements, and electives. Specific program requirements vary by major, but 120 credits is the baseline for degree completion.
 
-The exact distribution varies by specific program, but 120 credits is the baseline for all B.Sc. degrees.
-
-### q010 — specific — gold [2023] Bachelor of Science — General Degree Requirements [2026/27]
+### q010 — specific — gold [1900] Bachelor of Science — General Degree Requirements [2026/27]
 
 **Q:** According to the current 2026/27 calendar, what is the minimum number of credits required for a B.Sc. degree?
 
 **Reference:** A minimum of 120 credits (a major, double major, or General Science option requires at least 120 credits but may require more).
 
-**RAG answer** — groundedness 1.000 (4/4 claims):
+**RAG answer** — groundedness 1.00 (3/3) claims:
 
 According to the current 2026/27 calendar, the minimum number of credits required for a B.Sc. degree is **120 credits**.
 
-This applies to students pursuing a major, combined major, double major, or General Science option. However, honours or combined honours options require between 120-132 credits, and dual degrees require more than 120 credits (though some combinations may be completed in fewer than 180 credits).
+This applies to students pursuing a major, combined major, double major, or General Science option. Students in an honours or combined honours program may need between 120-132 credits depending on their specific specialization.
 
-For full details, see the Bachelor of Science General Degree Requirements page: https://vancouver.calendar.ubc.ca/faculties-colleges-and-schools/faculty-science/bachelor-science/general-degree-requirements
+For authoritative details, see: https://vancouver.calendar.ubc.ca/faculties-colleges-and-schools/faculty-science/bachelor-science/general-degree-requirements
 
-**No-RAG answer** — groundedness 0.667 (2/3 claims):
+**No-RAG answer** — groundedness 0.50 (1/2) claims:
 
 The minimum number of credits required for a B.Sc. degree at UBC Vancouver is **120 credits**.
 
-This includes general requirements such as breadth requirements across science and non-science disciplines, along with major-specific coursework. However, many programs require more than the minimum, so students should verify their specific program requirements in the calendar.
+This includes completing degree requirements across sciences courses, electives, and breadth requirements, though the exact distribution varies by program specialization.
 
 ### q011 — specific — gold [128] Bachelor of Arts — Degree Requirements for students who enter the program in 2024/25 or later [2026/27]
 
@@ -325,22 +323,28 @@ This includes general requirements such as breadth requirements across science a
 
 **Reference:** No. Their five degree requirements are Writing and Research, Ways of Knowing Breadth, Outside, Upper-level, and Arts Credit Minimum — there is no separate language requirement (that applies to students who entered in 2023/24 or earlier).
 
-**RAG answer** — groundedness 0.750 (3/4 claims):
+**RAG answer** — groundedness 0.25 (1/4) claims:
 
-Based on the excerpts provided, I can only definitively answer this for Linguistics majors: yes, they must complete 6 credits of coursework in a single language other than English.
+Based on the excerpts provided, the language requirement is specific to **Linguistics majors**, not all B.A. students. 
 
-However, the excerpts don't contain general B.A. degree requirements that would tell me whether a language requirement applies to all B.A. students who entered in 2024/25 or later. The 2026/27 B.A. degree requirements listed (Writing and Research, Ways of Knowing Breadth, Outside, Upper-level, and Arts Credit Minimum) don't explicitly mention a language requirement in the excerpts provided.
+Linguistics majors are required to complete 6 credits of coursework in a single language other than English. This requirement applies to all Linguistics students and cannot be waived based on existing language competency.
 
-For the most current and complete information about language requirements for B.A. students entering in 2024/25 or later, I'd recommend checking the full B.A. degree requirements page: https://vancouver.calendar.ubc.ca/faculties-colleges-and-schools/faculty-arts/bachelor-arts/degree-requirements-students-who-enter-program-202425-or-later
+However, the general B.A. degree requirements for students entering in 2024/25 or later do not include a language requirement as one of the five mandatory requirements (Writing and Research, Ways of Knowing Breadth, Outside, Upper-level, and Arts Credit Minimum).
 
-**No-RAG answer** — groundedness 0.000 (0/3 claims):
+So the answer depends on your major: if you're a Linguistics major, yes; if you're pursuing a different B.A. major, no.
 
-Yes. B.A. students entering in 2024/25 or later must complete a language requirement. This typically involves demonstrating proficiency in a language other than English, either through:
+For the most current information, see:
+- https://vancouver.calendar.ubc.ca/faculties-colleges-and-schools/faculty-arts/bachelor-arts/degree-requirements-students-who-enter-program-202425-or-later
 
-- Completing 6 credits of university-level coursework in a single language, or
-- Meeting proficiency requirements through placement testing or previous education
+**No-RAG answer** — groundedness 0.00 (0/4) claims:
 
-The specific language and level of proficiency required can vary by program, so you should check with your specific B.A. program for details on which languages satisfy this requirement and what options are available.
+Yes. B.A. students entering in 2024/25 or later must complete a language requirement. You need to demonstrate proficiency in a language other than English, which can be satisfied through:
+
+- Completing a language course (typically 3 credits at the 100-level or higher)
+- Passing a proficiency exam
+- Providing evidence of prior study or native fluency
+
+The specific language and level of proficiency needed may vary by program, so check your degree audit or faculty requirements for details.
 
 ### q012 — specific — gold [0] Academic Standing [2026/27]
 
@@ -348,29 +352,25 @@ The specific language and level of proficiency required can vary by program, so 
 
 **Reference:** In Good Standing; On Academic Probation; and Failed, Required to Withdraw. All students are In Good Standing on initial entry to the University.
 
-**RAG answer** — groundedness 1.000 (5/5 claims):
+**RAG answer** — groundedness 0.60 (3/5) claims:
 
 The three levels of academic standing at UBC are:
 
-1. **In Good Standing**
-2. **On Academic Probation**
-3. **Failed, Required to Withdraw**
+1. **In Good Standing** — the default status for all students upon initial entry to the University
+2. **On Academic Probation** — a status a student may move to based on academic performance, which may come with registration restrictions
+3. **Failed, Required to Withdraw** — the status assigned when a student's academic performance falls below required standards, resulting in a mandatory 12-month withdrawal from studies
 
-All students begin in Good Standing when they first enter the University. A student's standing may change to On Academic Probation or Failed, Required to Withdraw based on their academic performance. Students on Academic Probation may have restrictions placed on their registration, while students with Failed, Required to Withdraw status must withdraw from their studies for 12 months.
+For the authoritative and most current wording, see the Academic Standing page: https://vancouver.calendar.ubc.ca/campus-wide-policies-and-regulations/academic-standing
 
-For the most current and authoritative information, see: https://vancouver.calendar.ubc.ca/campus-wide-policies-and-regulations/academic-standing
-
-**No-RAG answer** — groundedness 0.000 (0/5 claims):
+**No-RAG answer** — groundedness 0.00 (0/6) claims:
 
 The three levels of academic standing at UBC Vancouver are:
 
-1. **Good Standing** – You're meeting satisfactory academic progress with a GPA of 2.0 or higher.
+1. **Good Standing** – Students meeting satisfactory academic progress requirements
+2. **Academic Probation** – Students whose GPA falls below 2.0 or who fail to meet progress standards
+3. **Dismissed** – Students who do not improve their standing while on probation and are required to withdraw
 
-2. **Academic Probation** – Your GPA has fallen below 2.0, and you're required to improve your academic performance within a specified timeframe.
-
-3. **Dismissal** – You've failed to meet academic requirements while on probation and are no longer permitted to continue studies at UBC.
-
-Students on probation typically have one or two terms to bring their GPA back to 2.0 or above, depending on their faculty's specific policies.
+Students on probation typically have one term to raise their GPA back to 2.0 or above to return to good standing. Failure to do so results in academic dismissal.
 
 ### g001 — general — gold [0] Academic Standing [2026/27]
 
@@ -378,82 +378,79 @@ Students on probation typically have one or two terms to bring their GPA back to
 
 **Reference:** There are three levels of academic standing: In Good Standing, On Academic Probation, and Failed, Required to Withdraw. Students enter the University In Good Standing.
 
-**RAG answer** — groundedness 1.000 (9/9 claims):
+**RAG answer** — groundedness 0.92 (11/12) claims:
+
+# Academic Standing at UBC
 
 UBC has three levels of academic standing:
 
-1. **In Good Standing** — This is the default standing for all students upon initial entry to the University.
+1. **In Good Standing** — All students start in this status when they first enter the University.
 
-2. **On Academic Probation** — A student may be placed on Academic Probation as a result of academic performance evaluations. Students on Academic Probation may have restrictions placed on their registration, which vary by Faculty.
+2. **On Academic Probation** — A student may be placed on academic probation based on their academic performance. Students on probation may have restrictions placed on their registration (which vary by faculty).
 
-3. **Failed, Required to Withdraw** — Students with this standing are required to withdraw from their studies for 12 months. However, if this standing is determined after the last date for withdrawal without a "W" on the transcript, the student may complete any courses they're already attending.
+3. **Failed, Required to Withdraw** — Students who don't meet academic requirements will be required to withdraw from their studies for 12 months. However, if a student is already registered in and attending courses when this standing is determined after the last withdrawal date, they may complete those courses.
 
-A student's academic standing can change based on their academic performance. If a student who has been required to withdraw later successfully appeals for readmission, they may be placed On Academic Probation.
+Students who were previously required to withdraw and successfully appeal for readmission may be placed back on academic probation.
 
-Additionally, if a student receives a **Failed, Required to Withdraw** standing and wishes to appeal to continue their studies immediately, they cannot register for or attend courses while awaiting the appeal results (except in limited circumstances noted above).
+A student who receives a "Failed, Required to Withdraw" standing and wishes to continue their studies immediately must appeal; they cannot register for or attend courses while awaiting the appeal outcome (except if already enrolled as noted above).
 
-For the authoritative and most current information, see: https://vancouver.calendar.ubc.ca/campus-wide-policies-and-regulations/academic-standing
+Note that specific faculties may have additional or more detailed requirements for academic standing. For example, the Faculty of Forestry and Environmental Stewardship has particular GPA and credit completion thresholds that determine standing.
 
-**No-RAG answer** — groundedness 0.231 (3/13 claims):
+For the most current and complete information, see the Academic Standing page: https://vancouver.calendar.ubc.ca/campus-wide-policies-and-regulations/academic-standing
 
-# UBC Academic Standing
+**No-RAG answer** — groundedness 0.15 (2/13) claims:
 
-## Standing Categories
+# UBC Academic Standings
 
 UBC uses these academic standings:
 
-- **Good Standing** – Minimum requirements met (typically 2.0 GPA)
-- **Academic Probation** – GPA fell below 2.0; student remains enrolled but under review
-- **Dismissal** – Repeated failure to meet minimum standards; student is required to withdraw
+## **Good Standing**
+Student is in good academic progress with no restrictions.
 
-## What Happens
+## **Academic Probation**
+- Triggered when GPA falls below 2.0 in a term
+- Student remains enrolled but is monitored
+- Must improve GPA to 2.0+ by the next grading period
 
-**On Probation:**
-- You remain enrolled and can continue courses
-- Your file is flagged for review
-- You may face restrictions (reduced course load, mandatory advising)
-- You have one term typically to return to Good Standing
+## **Required to Withdraw (RTW)**
+- Applied when a student on probation fails to reach 2.0 GPA again
+- Student must leave UBC for a minimum period (typically at least one full year)
+- Can reapply after the required absence period
 
-**On Dismissal:**
-- You are required to withdraw from the university
-- You cannot re-enroll immediately
-- Readmission requires demonstrated improvement (usually after sitting out 1+ terms and completing upgrading)
+## **Suspension**
+- Disciplinary action for academic misconduct or serious policy violations
+- Temporary removal from the institution
 
-## Key Factors
+## **Expulsion**
+- Permanent removal from UBC
+- Reserved for serious or repeated violations
 
-Academic standing is determined by:
-- **Cumulative GPA** (primary measure)
-- **Term GPA** (recent performance)
-- **Progress toward degree requirements**
+## Key Points:
+- **GPA Calculation**: Based on coursework in degree program (some courses excluded)
+- **Appeals**: Students can appeal standing decisions through their Faculty
+- **International Students**: Academic standing affects study permit validity
 
-Specific thresholds vary slightly by faculty (Engineering, Science, etc. have different standards).
+Your specific Faculty may have slightly different thresholds or procedures, so check your program-specific regulations in the UBC Calendar if you need details for your situation.
 
-**Bottom line:** Probation is a warning system; dismissal is involuntary withdrawal. Both are designed to ensure students are set up for success.
-
-### g002 — general — gold [2023] Bachelor of Science — General Degree Requirements [2026/27]
+### g002 — general — gold [1900] Bachelor of Science — General Degree Requirements [2026/27]
 
 **Q:** Roughly how many credits does a UBC B.Sc. degree require?
 
 **Reference:** A minimum of 120 credits; some options require more.
 
-**RAG answer** — groundedness 1.000 (3/3 claims):
+**RAG answer** — groundedness 0.75 (3/4) claims:
 
-A UBC Bachelor of Science degree requires a minimum of **120 credits** for a major, combined major, double major, or General Science option (though some of these may require more). An honours or combined honours option requires between 120 and 132 credits depending on the department's specialization.
+A UBC B.Sc. degree requires a minimum of **120 credits** for a major, combined major, double major, or General Science option. An honours or combined honours option requires between 120 and 132 credits depending on your specific program.
 
 The degree must be completed within a maximum of 180 attempted credits.
 
-For full details, see the [General Degree Requirements page](https://vancouver.calendar.ubc.ca/faculties-colleges-and-schools/faculty-science/bachelor-science/general-degree-requirements).
+For the most current and detailed requirements, see the official calendar page: https://vancouver.calendar.ubc.ca/faculties-colleges-and-schools/faculty-science/bachelor-science/general-degree-requirements
 
-**No-RAG answer** — groundedness 0.400 (2/5 claims):
+**No-RAG answer** — groundedness 1.00 (1/1) claims:
 
 A UBC B.Sc. degree requires **120 credits** to complete.
 
-This typically breaks down as:
-- **Lower-level courses** (100-200 level): foundation courses in math, sciences, and breadth requirements
-- **Upper-level courses** (300-400 level): major-specific and elective courses
-- **General Education Requirements**: breadth across sciences, arts, and other domains
-
-The exact distribution varies by specific program (e.g., Biology vs. Physics vs. Chemistry), but 120 credits is the standard total for the Bachelor of Science degree.
+This typically takes 4 years of full-time study, with students taking around 30 credits per year (usually 5 courses per term, 2 terms per year at 3 credits each).
 
 ### g003 — general — gold [5] Computer Science, Faculty of Science [2026/27]
 
@@ -461,25 +458,29 @@ The exact distribution varies by specific program (e.g., Biology vs. Physics vs.
 
 **Reference:** CPSC 110, Computation, Programs, and Programming (4 credits), covers fundamental program and computation structures.
 
-**RAG answer** — groundedness 0.714 (5/7 claims):
+**RAG answer** — groundedness 0.25 (1/4) claims:
 
-CPSC 110 (Computation, Programs, and Programming) is a 4-credit course that covers fundamental program and computation structures, introductory programming skills, and computation as a tool for information processing, simulation and modelling, and interacting with the world. The course format is [3-3-0], indicating 3 hours of lecture, 3 hours of lab/seminar, and 0 hours of other instruction per week.
+Based on the calendar information provided, CPSC_V 110 is a first-year Computer Science course designed for students pursuing Computer Science specializations or who plan to take CPSC_V 210. It's the recommended foundational course for students continuing in Computer Science.
 
-This course is designed for students pursuing Computer Science specializations or who plan to take CPSC 210.
+The calendar excerpts don't provide a detailed course description of what topics CPSC_V 110 covers specifically. For more detailed information about the course content, I'd recommend:
 
-For more details, you can consult the official course descriptions at https://vancouver.calendar.ubc.ca/course-descriptions/subject/cpscv.
+1. Consulting the course selection guide at https://www.cs.ubc.ca/students/undergrad/courses/choose-your-first-cour…
+2. Visiting the Department of Computer Science's undergraduate website at http://www.cs.ubc.ca/students/undergrad
+3. Contacting the Department of Computer Science directly
 
-**No-RAG answer** — groundedness 0.222 (2/9 claims):
+For the official course description, you can also check the full course descriptions at https://vancouver.calendar.ubc.ca/course-descriptions/subject/cpscv.
 
-CPSC 110 is UBC's introductory computer science course focused on **computation, programs, and programming**. It teaches fundamental programming concepts using the Racket language (a Lisp dialect), emphasizing problem-solving and design principles rather than just syntax.
+**No-RAG answer** — groundedness 0.14 (1/7) claims:
 
-Key topics include:
-- Data types and structures
-- Functions and recursion
-- Lists and trees
-- Program design and testing
+CPSC 110 is UBC's foundational computer science course focused on **computational thinking and program design**. 
 
-The course is 3 credits and serves as the foundation for most CS majors. It's designed for students with little to no prior programming experience, though it moves at a rigorous pace. Most CS students take it in their first year.
+The course teaches students how to:
+- Design and write programs using a functional programming approach (typically using languages like Racket or Python)
+- Break down problems systematically
+- Understand data structures and function design
+- Apply design recipes to solve computational problems
+
+It's a 3-credit course that serves as the entry point for most computer science majors and is open to students with no prior programming experience. CPSC 110 emphasizes problem-solving methodology and is a prerequisite for most upper-level CS courses like CPSC 210.
 
 ### g004 — general — gold [128, 114] Bachelor of Arts — Degree Requirements for students who enter the program in 2024/25 or later [2026/27] (+1 more)
 
@@ -487,53 +488,63 @@ The course is 3 credits and serves as the foundation for most CS majors. It's de
 
 **Reference:** B.A. students complete a set of faculty-wide degree requirements — for current entrants (2024/25 or later): Writing and Research, Ways of Knowing Breadth, Outside, Upper-level, and Arts Credit Minimum; earlier cohorts also had separate Language, Science, and Literature requirements.
 
-**RAG answer** — groundedness 0.286 (2/7 claims):
+**RAG answer** — groundedness 0.12 (1/8) claims:
 
-Based on the UBC Bachelor of Arts degree requirements, students must complete several types of requirements:
+# Bachelor of Arts Requirements
 
-1. **Writing and Research Requirement** — This has two components:
-   - **Writing Component**: 3 credits of instruction on research and writing in the disciplines (through courses like Arts One, ASTU_V 100, ASTU_V 101, CAP_V 100, ENGL_V 100, WRDS_V 150, WRDS_V 151, or WRDS_V 350). This must be completed before reaching Year 3 standing.
-   - **Research Component**: (Details are referenced but not fully shown in the excerpts provided)
+Based on the calendar, UBC Bachelor of Arts students must complete several key requirements:
 
-2. **Language Requirement** — Students must satisfy this through one of three methods:
-   - Complete a language course (excluding English) at BC Grade 12 level or equivalent prior to admission
-   - Pass a proficiency test (with no course credit awarded)
-   - Complete language courses at UBC to reach or exceed specified proficiency levels
+## Writing and Research Requirement
 
-3. **Ways of Knowing Breadth Requirements** — Referenced in the writing component section, though full details aren't provided in these excerpts.
+This has two components:
 
-For the complete and most current details on all Bachelor of Arts requirements, please consult the official UBC Calendar pages:
+**Writing Component:** You must successfully complete 3 credits in research and writing through an approved course such as Arts One, ASTU_V 100, ASTU_V 101, CAP_V 100, ENGL_V 100, or WRDS_V 150/151/350. This must be completed before reaching Year 3 standing. If you're admitted from secondary school, you should attempt it in your first 30 credits and must complete it before reaching 54 credits. Transfer students must attempt it in their first Winter Session.
+
+**Research Component:** (The excerpts provided don't include the full details of this component.)
+
+## Language Requirement
+
+You must satisfy the Language Requirement in one of three ways:
+1. Complete a non-English language course at BC Grade 12 level or equivalent while still in secondary school
+2. Pass a language proficiency test
+3. Complete language coursework at UBC to reach or exceed specified proficiency levels
+
+The excerpts don't provide a complete picture of all degree requirements (such as breadth requirements, electives, and total credit hours). For comprehensive details on all Bachelor of Arts requirements, please consult the official Faculty of Arts calendar pages:
 - For students entering 2024/25 or later: https://vancouver.calendar.ubc.ca/faculties-colleges-and-schools/faculty-arts/bachelor-arts/degree-requirements-students-who-enter-program-202425-or-later
 - For students entering 2023/24 or earlier: https://vancouver.calendar.ubc.ca/faculties-colleges-and-schools/faculty-arts/bachelor-arts/degree-requirements-students-who-enter-program-202324-or-earlier
 
-**No-RAG answer** — groundedness 0.250 (3/12 claims):
+**No-RAG answer** — groundedness 0.00 (0/11) claims:
 
 # UBC Bachelor of Arts Requirements
 
-A BA student must complete **120 credits** with the following structure:
+A UBC BA student must complete **120 credits** total, distributed as follows:
 
 ## Core Requirements
-- **English requirement**: One course (typically ENGL 110)
-- **Quantitative requirement**: One approved course in math, statistics, or logic
-- **Writing requirement**: Demonstrated through coursework
+- **English Composition (3 credits)**: WRDS 150 or equivalent
+- **Breadth Requirements (36 credits minimum)**: Courses across at least 4 of these 5 faculties:
+  - Science
+  - Social Sciences
+  - Arts
+  - Applied Science
+  - Commerce
 
-## Program Structure
-- **Major(s)**: 30-36 credits in your chosen discipline(s)
-- **Minor (optional)**: 18-24 credits if declared
-- **Electives**: Fill remaining credits to reach 120
+## Major/Minor
+- **Major (30-36 credits)**: Completion of a chosen discipline
+- **Minor (18 credits)**: Optional but common; can substitute with second major or additional electives
 
-## Breadth Requirements
-Courses must span multiple faculties:
-- At least one course each from Science, Social Sciences, and Humanities/Arts
-- This prevents concentrating too heavily in one area
+## Upper-Level Requirement
+- **Minimum 42 upper-level credits** (300-level and above)
 
-## Upper-Level Courses
-- Minimum **36 credits** at the 300-level or above
+## Electives
+- Remaining credits to reach 120 can be from any eligible courses
 
-## Additional Notes
-- Grade requirements vary by major (typically 60% minimum to progress)
-- Some programs have additional prerequisites or prerequisites for upper-level courses
-- Specific requirements depend on your declared major
+## GPA Requirement
+- **2.0 GPA minimum** to graduate
 
-I'd recommend checking your specific program requirements in the **UBC Calendar** or speaking with an Academic Advisor in your faculty, as some programs have specialized requirements beyond these general BA guidelines.
+## Key Notes
+- Students typically declare their major by end of second year
+- Specific major programs have additional prerequisites and course requirements
+- Some programs (like combined majors) may have different credit allocations
+
+Would you like details about a specific major or concentration?
 

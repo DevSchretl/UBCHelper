@@ -203,5 +203,18 @@ REPORTS_DIR = EVAL_DIR / "reports"
 REPORT_PATH = REPORTS_DIR / "report.md"
 ABLATION_REPORT_PATH = REPORTS_DIR / "ablation.md"
 HISTORY_PATH = REPORTS_DIR / "history.csv"
+AGENT_REPORT_PATH = REPORTS_DIR / "agent.md"
+AGENT_HISTORY_PATH = REPORTS_DIR / "agent_history.csv"
+AGENT_TRACE_DUMP_PATH = REPORTS_DIR / "agent_traces.jsonl"
 EVAL_K = int(os.getenv("UBCAL_EVAL_K", str(TOP_K)))
 JUDGE_MODEL = os.getenv("UBCAL_JUDGE_MODEL", CHAT_MODEL)
+
+# Cohere trial keys allow 10 rerank calls a minute, and one agent-eval question makes up to
+# five (one simple + up to three agent hops + one budget-matched control). Pausing between
+# questions keeps a run under the ceiling instead of eating rerank.py's 15+30+45 s backoff.
+# 0 = no pacing, which is right for a paid key or any mode that never calls Cohere.
+AGENT_EVAL_PACE_SECONDS = float(os.getenv("UBCAL_AGENT_EVAL_PACE", "0"))
+# router.classify() is nondeterministic (generate.py sends no temperature to Anthropic), so
+# more than one vote measures the router's stability as well as its accuracy, one cheap LLM
+# call each. Use 3 for any number you intend to publish.
+AGENT_EVAL_ROUTER_VOTES = int(os.getenv("UBCAL_AGENT_EVAL_ROUTER_VOTES", "1"))
