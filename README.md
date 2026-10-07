@@ -1,19 +1,3 @@
----
-title: UBC Calendar RAG
-emoji: 🎓
-colorFrom: blue
-colorTo: indigo
-sdk: gradio
-sdk_version: 6.26.0
-app_file: app.py
-python_version: "3.12"
-short_description: Ask the UBC calendar, and watch the search work
-pinned: false
----
-
-<!-- The block above is Hugging Face Spaces configuration (GitHub renders it as a table).
-     See "The demo" below for how the Space is deployed. -->
-
 # UBCHelper: RAG over the UBC Vancouver Academic Calendar
 
 A retrieval-augmented **academic-calendar advisor**. Ask a question about UBC Vancouver
