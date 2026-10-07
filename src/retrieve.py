@@ -39,8 +39,8 @@ class Result:
     """One retrieved excerpt (chunk record) plus its retrieval score.
 
     What `score` means depends on the mode that produced it: cosine similarity (dense),
-    RRF fused score (hybrid), or a cross-encoder logit (hybrid_rerank). Higher is always
-    better within one result list, but values are not comparable across modes.
+    RRF fused score (hybrid), or Cohere's 0-1 relevance score (hybrid_rerank). Higher is
+    always better within one result list, but values are not comparable across modes.
     """
 
     id: int
@@ -126,7 +126,7 @@ def warmup() -> int:
     """Load the index and build the BM25 postings up front; returns the chunk count.
 
     Both are lazily cached module globals, so without this the *first* query of a process
-    pays the 22 MB .npy load plus the in-memory BM25 build. Fine for the CLI, bad for the
+    pays the ~100 MB .npy load plus the in-memory BM25 build. Fine for the CLI, bad for the
     first visitor to a web demo.
     """
     _, metadata = _load_index()
@@ -180,7 +180,8 @@ def retrieve(query: str, top_k: int | None = None, mode: str | None = None) -> l
         return out
 
     # Stage 2 — precision: the cross-encoder re-scores the fused shortlist.
-    # Imported here so dense/hybrid modes never pay the multi-second torch import.
+    # Imported here, not at the top: rerank.py imports Result from this module, so a
+    # top-level import would be circular.
     from . import rerank
 
     shortlist = _as_results(fused, config.RERANK_CANDIDATES)

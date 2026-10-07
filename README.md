@@ -12,7 +12,7 @@ pinned: false
 ---
 
 <!-- The block above is Hugging Face Spaces configuration (GitHub renders it as a table).
-     See "The demo" below, and DEPLOY.md for the deployment runbook. -->
+     See "The demo" below for how the Space is deployed. -->
 
 # UBCHelper: RAG over the UBC Vancouver Academic Calendar
 
@@ -213,8 +213,9 @@ For a self-hosted *live* deployment the [Dockerfile](Dockerfile) is ready, and
 Dataset that the container pulls at startup. Pin the revision: chunk ids are positional, so a
 re-ingest renumbers them all.
 
-**[DEPLOY.md](DEPLOY.md) is the full runbook**, with the exact `hf` CLI commands, why the Space
-is set up the way it is, and a troubleshooting table.
+[scripts/setup_space.py](scripts/setup_space.py) creates and configures the Space in one step:
+it sets the API keys as Space secrets over the API, so they never pass through a command line,
+and checks that the read token can actually see the private index before anything deploys.
 
 ---
 
@@ -262,7 +263,7 @@ to measure what retrieval is actually worth.
 
 ```powershell
 # Generate candidate questions from the indexed corpus, then CURATE BY HAND:
-python -m eval.make_testset --num 20
+python -m eval.make_testset --num 20   # writes eval/testset.candidates.json, not the curated set
 
 # The before/after retrieval sweep (fast, deterministic):
 $env:UBCAL_RETRIEVAL_MODE="dense";         python -m eval.run_eval --retrieval-only --name baseline-dense

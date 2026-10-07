@@ -16,7 +16,11 @@ in the 2025/26 vs 2026/27 edition or across cohort pages) add sibling ids to gol
 and commit the frozen result. Start small and grow.
 
 Run (needs a built index; uses the local LM Studio backend — see config.CHAT_MODEL):
-    python -m eval.make_testset --num 15 --out eval/testset.json
+    python -m eval.make_testset --num 15     # writes eval/testset.candidates.json
+
+The default output is deliberately NOT eval/testset.json: that file is the hand-curated set, and
+a fresh batch of raw candidates must never overwrite it. Curate the candidates, then copy the
+items you keep across.
 """
 
 from __future__ import annotations
@@ -31,6 +35,9 @@ from src import config, retrieve
 from eval.judge import _extract_json, JudgeParseError  # reuse robust JSON parsing
 
 _MIN_CHUNK_CHARS = 300  # too little text to ground a specific question + answer
+
+# Where raw candidates go by default, kept apart from the curated config.TESTSET_PATH.
+CANDIDATES_PATH = config.EVAL_DIR / "testset.candidates.json"
 
 _SYSTEM = (
     "You write evaluation data for a UBC academic-calendar question-answering system. "
@@ -103,7 +110,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Generate a corpus-grounded eval test set.")
     parser.add_argument("--num", type=int, default=15, help="how many questions to generate")
     parser.add_argument("--seed", type=int, default=42, help="sampling seed (reproducible)")
-    parser.add_argument("--out", default=str(config.TESTSET_PATH), help="output JSON path")
+    parser.add_argument("--out", default=str(CANDIDATES_PATH),
+                        help=f"output JSON path (default: {CANDIDATES_PATH.name}, never the "
+                             f"curated {config.TESTSET_PATH.name})")
     args = parser.parse_args()
 
     print(f"Generating {args.num} questions from the indexed corpus "

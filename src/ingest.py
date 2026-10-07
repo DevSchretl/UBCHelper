@@ -6,7 +6,9 @@ Pipeline:
 
 Keeps RAGChef's index format: a float32 embeddings matrix (index/embeddings.npy) plus an
 id-aligned list of chunk records (index/metadata.json). `id` is the global position of a chunk
-across all pages, assigned here so the eval's gold_ids stay stable.
+across all pages, assigned here. Being positional, it renumbers whenever a re-ingest gains or
+loses a page, so the eval names its gold chunks by `chunk_key` instead and resolves them to ids
+at load time (eval/retrieval_metrics.py:resolve_gold_ids).
 
 Run from the project root:
     python -m src.ingest                 # chunk + embed all cached pages
@@ -33,7 +35,7 @@ def build_chunks(limit_pages: int = 0) -> list[dict]:
             break
         chunks.extend(chunk.page_record_to_chunks(record))
     for idx, c in enumerate(chunks):
-        c["id"] = idx  # stable global position; the eval matches gold_ids on this
+        c["id"] = idx  # row in embeddings.npy; renumbers on re-ingest (see the docstring)
     return chunks
 
 

@@ -176,8 +176,9 @@ def _complete_local(system: str, user: str) -> str:
 def _complete_anthropic(system: str, user: str) -> str:
     """Claude via the Anthropic API. `system` is a top-level arg, not a message.
 
-    Note: current Claude models don't take sampling params (no `temperature`/`top_p`),
-    so grounding is steered by SYSTEM_PROMPT rather than by config.TEMPERATURE.
+    Note: no `temperature` is sent, so config.TEMPERATURE only applies to the local backend.
+    Haiku 4.5 would accept it, but newer Claude models reject sampling params with a 400, and
+    leaving it out keeps UBCAL_ANTHROPIC_MODEL swappable. Grounding is steered by SYSTEM_PROMPT.
     """
     client = _get_anthropic_client()
     response = client.messages.create(

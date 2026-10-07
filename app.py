@@ -13,7 +13,7 @@ the stage they are reading. The Answer panel is open by default.
 There is no `@spaces.GPU` here because there is nothing to put on a GPU — the pipeline is
 numpy plus three hosted APIs. That rules out ZeroGPU, which kills a Space with "No
 @spaces.GPU function detected during startup", so this Space runs on `cpu-basic` hardware
-(free per-hour, but creating a compute Space needs an HF PRO account). See DEPLOY.md.
+(free per-hour, but creating a compute Space needs an HF PRO account).
 
 The spend controls from the FastAPI build carry over unchanged (`web/limits.py`): a global
 daily ceiling on paid API calls and per-IP sliding windows, keyed on a salted hash of the
@@ -77,7 +77,7 @@ EXAMPLES = [
 ]
 
 # Pull the index and warm the caches at import, before Gradio starts serving — otherwise the
-# first visitor pays the 22 MB load plus the BM25 postings build inside their request.
+# first visitor pays the ~100 MB load plus the BM25 postings build inside their request.
 print(f"[demo] {bootstrap.ensure_index()}", flush=True)
 CHUNKS = retrieve.warmup()
 limits.init()

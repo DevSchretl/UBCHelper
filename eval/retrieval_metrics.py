@@ -12,7 +12,8 @@ then averaged across all questions:
     recall@k  what FRACTION of gold ids landed in the top-k?           -> mean
     MRR       1 / rank of the FIRST gold hit (0 if none)               -> mean
 
-Run it (needs LM Studio for the query embeddings + a built index):
+Run it (needs a built index, OPENAI_API_KEY for the query embeddings, and COHERE_API_KEY in
+the default hybrid_rerank mode):
     python -m eval.retrieval_metrics
     python -m eval.retrieval_metrics --k 3 --limit 5
 """
@@ -26,7 +27,7 @@ from src import config, retrieve
 
 # ----------------------------------------------------------------------------------------
 # Pure metric functions. These take plain lists of ids, so they are fully deterministic
-# and unit-testable with no LM Studio, no index, no network.
+# and unit-testable with no API keys, no index, no network.
 # ----------------------------------------------------------------------------------------
 
 
@@ -59,7 +60,8 @@ def reciprocal_rank(retrieved_ids: list[int], gold_ids: list[int]) -> float:
 
 # ----------------------------------------------------------------------------------------
 # Runner: drive the retriever over the test set and aggregate the metrics above.
-# (This part DOES need LM Studio — to embed each query — and a built index.)
+# (This part DOES need the hosted APIs: OpenAI to embed each query, Cohere to rerank in the
+# default mode. And a built index.)
 # ----------------------------------------------------------------------------------------
 
 

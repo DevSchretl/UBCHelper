@@ -8,9 +8,10 @@ is attribution; a public bulk download is not.
 
     python scripts/publish_index.py --repo your-username/ubchelper-index
 
-Prints the commit sha at the end — pin it as DEMO_INDEX_REVISION. The testsets' gold_ids
-are positional chunk ids, so a later re-ingest silently invalidates both the eval and the
-cached demo runs unless the deployment is pinned to a known build.
+Prints the commit sha at the end — pin it as DEMO_INDEX_REVISION. Chunk ids are positional,
+so a later re-ingest renumbers them. The test sets survive that (they resolve gold_keys at load
+time), but the cached demo runs hold raw ids, so an unpinned deployment would let a re-ingest
+silently desync the recorded runs from the index.
 """
 
 from __future__ import annotations

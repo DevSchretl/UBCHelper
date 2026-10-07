@@ -6,9 +6,9 @@ Idempotent: safe to re-run to update settings on an existing Space.
 
     python scripts/setup_space.py --space DevSchretl/ubc-calendar-rag
 
-Free Gradio Spaces must run on ZeroGPU hardware, which is the default here. This app requests
-no GPU (there is no @spaces.GPU anywhere) so it consumes a ZeroGPU *hosting* slot but never any
-GPU quota. Afterwards, push the code:
+The Space runs on `cpu-basic` hardware, which is the default here. ZeroGPU is not an option:
+it stops any Space that defines no @spaces.GPU function, and this app needs no GPU (see the
+app.py docstring). Afterwards, push the code:
 
     git remote add hf https://huggingface.co/spaces/<space>
     git push hf main
@@ -34,8 +34,9 @@ def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--space", required=True, help="e.g. DevSchretl/ubc-calendar-rag")
     p.add_argument("--env", type=Path, default=Path(".env"))
-    p.add_argument("--hardware", default="zero-a10g",
-                   help="ZeroGPU is what makes a free Gradio Space free (default: zero-a10g)")
+    p.add_argument("--hardware", default="cpu-basic",
+                   help="Space hardware (default: cpu-basic). Not ZeroGPU, which stops a Space "
+                        "that has no @spaces.GPU function")
     p.add_argument("--private", action="store_true", help="create it private; flip later in Settings")
     p.add_argument("--per-hour", type=int, default=30, help="DEMO_IP_PER_HOUR (default 30, good for testing)")
     p.add_argument("--per-day", type=int, default=60)

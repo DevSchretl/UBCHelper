@@ -35,7 +35,7 @@ _status = {"index": "not loaded", "chunks": 0}
 async def lifespan(app: FastAPI):
     """Pull the index, warm the caches, and create the limits DB before serving.
 
-    Warming matters: the index load (22 MB .npy) plus the BM25 postings build costs several
+    Warming matters: the index load (~100 MB .npy) plus the BM25 postings build costs several
     seconds, and without this the first visitor pays it inside their request.
     """
     limits.init()

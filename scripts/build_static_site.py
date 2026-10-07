@@ -16,7 +16,7 @@ nothing to rate limit, and never sleeps. Only arbitrary questions are lost.
     git push -f space main
 
 `site/` is generated output and is gitignored in this repo; it is its own git repo pushed to
-the Space. See DEPLOY.md for the full walkthrough.
+the Space.
 """
 
 from __future__ import annotations
